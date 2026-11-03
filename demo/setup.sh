@@ -8,7 +8,7 @@ set -euo pipefail
 
 CLUSTER=${CLUSTER:-contribfest}
 CROSSPLANE_VERSION=${CROSSPLANE_VERSION:-2.4.3}
-FN_PACKAGE=${FN_PACKAGE:-xpkg.upbound.io/upbound/function-lifecycle:v0.1.0}
+FN_PACKAGE=${FN_PACKAGE:-ghcr.io/upbound/function-lifecycle:v0.1.0}
 DIR=$(cd "$(dirname "$0")" && pwd)
 
 kind get clusters 2>/dev/null | grep -qx "$CLUSTER" || kind create cluster --name "$CLUSTER" --wait 2m

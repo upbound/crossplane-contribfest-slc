@@ -37,8 +37,10 @@ Sections 3–6 need these:
 - [ ] Make both repos public. Org members can't create public repos in
       `upbound`, so an org owner has to change the visibility. Until then,
       give testers access.
-- [ ] Decide the registry, then release v0.1.0. CI pushes to ghcr.io, but
-      `example/functions.yaml` and `demo/setup.sh` say `xpkg.upbound.io`.
+- [x] Registry: `ghcr.io/upbound/function-lifecycle`, for vendor neutrality
+      (2026-11-04). CI pushes there; the examples and `demo/setup.sh` say so.
+- [ ] Release v0.1.0: run CI with `version: v0.1.0`, then make the ghcr.io
+      package public. It's private like the repo, so a cluster can't pull it.
 - [ ] File the curated issues on function-lifecycle with the `contribfest`
       label, plus a pinned tracking issue
 
