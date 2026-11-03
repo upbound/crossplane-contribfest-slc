@@ -64,6 +64,7 @@ Lab 6.
 | `crossplane beta trace: unknown command` | CLI v2.5 renamed it | `crossplane resource trace` |
 | golangci-lint not installed | Local laptop | `go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.0 run ./...` |
 | CI `push` job fails with 403 on ghcr.io | Default token can't write packages | Repo Settings → Actions → General → Workflow permissions → Read and write. PR checks don't need it. |
+| CI `push` job fails with `DENIED` on the second architecture, on the repo's very first push | ghcr.io creates the package with the first architecture, but the workflow can't write to it yet | Re-run the failed job (`gh run rerun <id> --failed`). It passed on the re-run for upbound/function-lifecycle. PR checks don't run this job. |
 | PR has a DCO failure | Commit isn't signed off | `git commit --amend -s --no-edit && git push -f` |
 
 ## Talking points when someone asks…
