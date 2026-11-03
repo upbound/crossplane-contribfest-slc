@@ -32,9 +32,11 @@ These can't be checked without you:
 
 Sections 3–6 need these:
 
-- [ ] Push `upbound/function-lifecycle` with its tags (`git push origin main --tags`)
-      and make it public
-- [ ] Make this hub repo public, or give testers access
+- [x] Create `upbound/function-lifecycle` and this hub repo, and push `main`
+      and the workshop tags (2026-11-03, both private)
+- [ ] Make both repos public. Org members can't create public repos in
+      `upbound`, so an org owner has to change the visibility. Until then,
+      give testers access.
 - [ ] Decide the registry, then release v0.1.0. CI pushes to ghcr.io, but
       `example/functions.yaml` and `demo/setup.sh` say `xpkg.upbound.io`.
 - [ ] File the curated issues on function-lifecycle with the `contribfest`
