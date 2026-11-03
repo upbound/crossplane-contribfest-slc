@@ -18,6 +18,7 @@
 ## 📋 Prerequisites
 
 - [ ] Completed Lab 1
+- [ ] Both terminals in `~/function-lifecycle`. Every command in this lab runs there.
 
 ## ✅ Verify Lab 1 Completion
 
@@ -99,16 +100,35 @@ func (m Mode) Policies() ([]string, error) {
 
 ## Step 3: Write `RunFunction`
 
-Replace `fn.go` with the outline below and fill in the three `TODO`s. The
-imports you need are `errors`, `logging`, `fnv1`, `request`, `resource`, and
-`response` from `github.com/crossplane/function-sdk-go`. Remove the
-`input/v1beta1` import for now; Lab 3 brings it back.
+Replace all of `fn.go` with this file, then fill in the three `TODO`s. It
+drops the template's `input/v1beta1` import for now; Lab 3 brings it back.
 
 ```go
+package main
+
+import (
+	"context"
+
+	"github.com/crossplane/function-sdk-go/errors"
+	"github.com/crossplane/function-sdk-go/logging"
+	fnv1 "github.com/crossplane/function-sdk-go/proto/v1"
+	"github.com/crossplane/function-sdk-go/request"
+	"github.com/crossplane/function-sdk-go/resource"
+	"github.com/crossplane/function-sdk-go/response"
+)
+
 // AnnotationMode on the XR selects the lifecycle mode of its composed
 // resources.
 const AnnotationMode = "lifecycle.fn.crossplane.io/mode"
 
+// Function sets spec.managementPolicies on composed managed resources.
+type Function struct {
+	fnv1.UnimplementedFunctionRunnerServiceServer
+
+	log logging.Logger
+}
+
+// RunFunction runs the Function.
 func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) (*fnv1.RunFunctionResponse, error) {
 	f.log.Info("Running function", "tag", req.GetMeta().GetTag())
 
@@ -137,9 +157,11 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 
 	var applied, skipped int
 	for name, dr := range desired {
-		// TODO 3: skip resources that aren't managed resources (see isManaged)
-		// and count them. Set the rest with
-		// dr.Resource.SetValue("spec.managementPolicies", policies).
+		// TODO 3: if dr isn't a managed resource (see isManaged), log it with
+		// f.log.Debug("Skipping a resource that isn't managed", "resource", name),
+		// count it in skipped, and continue. Otherwise set its policies with
+		// dr.Resource.SetValue("spec.managementPolicies", policies), return a
+		// fatal result if that fails, and count it in applied.
 	}
 
 	if err := response.SetDesiredComposedResources(rsp, desired); err != nil {
@@ -173,8 +195,14 @@ Read the failures: `-want` is the expected response, `+got` is yours.
 
 ## Step 5: Render the real pipeline
 
-Restart the function in terminal 1 (`Ctrl-C`, then `go run . --insecure --debug`),
-then in terminal 2:
+Restart the function in terminal 1 so it runs your new code:
+
+```shell
+# Ctrl-C, then:
+go run . --insecure --debug --address=127.0.0.1:9443
+```
+
+Then in terminal 2:
 
 ```shell
 make -C example render XR=xr-provision.yaml
@@ -200,11 +228,13 @@ function-patch-and-transform in the background, and it keeps running until
 
 ## 🛟 Stuck?
 
+Jump to the finished Lab 2:
+
 ```shell
-# Start Lab 2 again from a clean Lab 1
-git fetch https://github.com/upbound/function-lifecycle workshop/lab-01 && git reset --hard FETCH_HEAD
-# Or jump to the finished Lab 2
-git fetch https://github.com/upbound/function-lifecycle workshop/lab-02 && git reset --hard FETCH_HEAD
+git fetch https://github.com/upbound/function-lifecycle workshop/lab-02 && git read-tree -u --reset FETCH_HEAD
 ```
+
+This replaces your files with the end of Lab 2 and leaves your commits as
+they are, which Lab 5 relies on. Restart the function in terminal 1 afterwards.
 
 **Next:** [Lab 3: Generalize with an input API](03-generalize-input.md)

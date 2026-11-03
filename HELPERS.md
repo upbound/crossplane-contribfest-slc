@@ -15,11 +15,15 @@ fast.
 
 Every lab ends at a tag in
 [upbound/function-lifecycle](https://github.com/upbound/function-lifecycle).
-This works in any repo, including one made with `xpkg init`:
+In `~/function-lifecycle`:
 
 ```shell
-git fetch https://github.com/upbound/function-lifecycle workshop/lab-0N && git reset --hard FETCH_HEAD
+git fetch https://github.com/upbound/function-lifecycle workshop/lab-0N && git read-tree -u --reset FETCH_HEAD
 ```
+
+`read-tree` replaces the files and keeps the branch where it is. Don't use
+`git reset --hard` here. It would move `main` to the tag, and Lab 5's PR would
+have nothing to commit. Restart the function afterwards.
 
 | Starting lab | Fetch tag |
 |---|---|
@@ -27,6 +31,10 @@ git fetch https://github.com/upbound/function-lifecycle workshop/lab-0N && git r
 | 3 | `workshop/lab-02` |
 | 4 | `workshop/lab-03` |
 | 5 | `workshop/lab-04` |
+
+If the scaffold itself is broken (no repo, or `xpkg init` failed), use the
+command in Lab 1's 🛟 section. It starts `~/function-lifecycle` over from
+`workshop/lab-01`.
 
 ## Setup
 
@@ -51,12 +59,14 @@ Lab 6.
 | render: `--crossplane-binary: stat …/crossplane-core: no such file or directory` | The flag takes a path, not a command name | `--crossplane-binary=$(which crossplane-core)`, or use `make -C example render` |
 | render: `Cannot connect to the Docker daemon` | `--crossplane-binary` is missing, so render fell back to Docker | Add `--crossplane-binary=$(which crossplane-core)` |
 | render takes 10+ seconds | `functions.yaml` targets `localhost`, which resolves slowly on some networks | Set `render.crossplane.io/runtime-development-target: 127.0.0.1:9443` (Lab 1, Step 3) |
-| render: `connection refused` / `Unavailable` on `127.0.0.1:9443` | The function isn't running | `go run . --insecure --debug` in terminal 1 |
-| render: `connection refused` on `127.0.0.1:9444` | function-patch-and-transform isn't running | `make -C example render` starts it. For hand renders, run `make -C example serve`. |
+| `make: *** example: No such file or directory` or `cd: no such file or directory: example` | The terminal isn't in `~/function-lifecycle` | `cd ~/function-lifecycle`. Every lab command runs there. |
+| render: `connection refused` / `Unavailable` on `127.0.0.1:9443` | The function isn't running | `go run . --insecure --debug --address=127.0.0.1:9443` in terminal 1 |
+| render: `connection refused` on `127.0.0.1:9444` | function-patch-and-transform isn't running | `make -C example render` starts it. For hand renders, run `make -C example pt` first. |
 | render shows old behavior | The function wasn't restarted after a code change | `Ctrl-C` and `go run` again. `make -C example test` builds fresh. |
-| `make test`: `Something is already listening on port 9443` | `go run` is still running in terminal 1 | `Ctrl-C` it, then `make -C example test` again |
+| `make test`: `Something is already listening on port 9443` | `go run` or `make serve` is still running in terminal 1 | `Ctrl-C` it, then `make -C example test` again |
 | `bind: address already in use` | An old function is still running | `lsof -ti :9443 \| xargs kill`. For port 9444: `make -C example stop`. |
-| macOS asks whether to accept incoming network connections | The firewall sees a new binary after each `go run` | Click Allow. Or run `go run . --insecure --debug --address=127.0.0.1:9443`, which listens on loopback only. |
+| macOS asks whether to accept incoming network connections | The function was started without `--address=127.0.0.1:9443`, so it listens on every interface | Click Allow, or restart it with the flag as the labs show |
+| Lab 5: `nothing to commit, working tree clean` | A catch-up with `git reset --hard` moved `main` to a tag | On `main`: `git reset --soft $(git rev-list --max-parents=0 HEAD)`. That moves `main` back to the first commit, the scaffold, and keeps the files. Then Step 4 again. |
 | `no space left on device` | Go's build cache is about 2 GB | `go clean -cache` frees it. The next build is slower. |
 | Lab 5 `docker build` fails on `RUN --mount` or `BUILDPLATFORM` | Docker without BuildKit, for example Colima without `buildx` | Skip it. CI builds the package. |
 | `unknown field` in input | `request.GetInput` rejects unknown fields | Check the input YAML against `input/v1beta1/input.go`, and rerun `go generate ./...` |

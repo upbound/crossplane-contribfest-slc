@@ -65,6 +65,13 @@ export PATH="$BIN_DIR:$PATH"
 
 step "Required"
 command -v git >/dev/null && pass "git $(git --version | awk '{print $3}')" || fail "git"
+# Lab 1 commits the scaffold, and that fails without a name and email.
+if [ -n "$(git config user.name 2>/dev/null)" ] && [ -n "$(git config user.email 2>/dev/null)" ]; then
+  pass "git identity: $(git config user.name) <$(git config user.email)>"
+else
+  fail "git has no name or email, and Lab 1 commits. Set them with:"
+  echo "      git config --global user.name \"Your Name\" && git config --global user.email you@example.com"
+fi
 command -v curl >/dev/null && pass "curl" || fail "curl"
 if command -v go >/dev/null; then
   v=$(go env GOVERSION | sed 's/^go//')
@@ -223,8 +230,12 @@ fi
 
 if [ $CHECK_ONLY = 0 ]; then
   step "Warming the Go caches so the labs work offline"
+  # The same template the labs start from. warm_lab3.go adds the import Lab 3
+  # adds, so its go mod tidy finds every module in the cache.
   if crossplane xpkg init warmup function-template-go -d "$tmp/warmup" -r >"$tmp/init.log" 2>&1 &&
-    (cd "$tmp/warmup" && go mod download && go build ./... && go test ./... && go generate ./...) >"$tmp/warm.log" 2>&1; then
+    (cd "$tmp/warmup" && go mod download && go build ./... && go test ./... && go generate ./... &&
+      printf 'package main\n\nimport _ "github.com/crossplane/crossplane-runtime/v2/pkg/fieldpath"\n' >warm_lab3.go &&
+      go mod tidy && go build ./...) >"$tmp/warm.log" 2>&1; then
     pass "function-template-go: modules, build cache, and controller-gen for go generate"
     (cd "$tmp/warmup" && golangci-lint run ./... >/dev/null 2>&1)
     pass "golangci-lint cache"
@@ -233,7 +244,7 @@ if [ $CHECK_ONLY = 0 ]; then
     fail "couldn't build function-template-go"
   fi
   if git clone -q --depth 1 "$FN_REPO" "$tmp/fn" 2>/dev/null; then
-    if (cd "$tmp/fn" && go mod download && go build ./...) >/dev/null 2>&1; then
+    if (cd "$tmp/fn" && go mod download && go mod tidy && go test ./...) >/dev/null 2>&1; then
       pass "function-lifecycle modules"
     else
       fail "couldn't build function-lifecycle"
@@ -259,21 +270,43 @@ for t in kind kubectl helm; do command -v $t >/dev/null || missing="$missing $t"
 [ -z "$missing" ] && pass "kind, kubectl, helm (Lab 6)" || warn "missing$missing: only Lab 6 needs them"
 
 step "Your PATH"
+line="export PATH=\"$BIN_DIR:\$PATH\""
+this_terminal=0
 if [ $path_ok = 1 ]; then
   pass "$BIN_DIR is on your PATH"
 else
   case "${SHELL##*/}" in
-    zsh) rc="~/.zshrc" ;;
-    bash) [ $os = darwin ] && rc="~/.bash_profile" || rc="~/.bashrc" ;;
-    *) rc="your shell's startup file" ;;
+    zsh) rc=$HOME/.zshrc ;;
+    bash) [ $os = darwin ] && rc=$HOME/.bash_profile || rc=$HOME/.bashrc ;;
+    *) rc= ;;
   esac
-  fail "$BIN_DIR isn't on your PATH. Add this line to $rc, then open a new terminal:"
-  echo "      export PATH=\"$BIN_DIR:\$PATH\""
+  shown=${rc:+"~/${rc#"$HOME"/}"}
+  if [ -n "$rc" ] && grep -qxF "$line" "$rc" 2>/dev/null; then
+    added=1
+  elif [ -n "$rc" ] && [ $CHECK_ONLY = 0 ] && [ -t 0 ] && [ -t 1 ]; then
+    answer=
+    read -r -p "  $BIN_DIR isn't on your PATH. Add it to $shown? [Y/n] " answer
+    case $answer in
+      [nN]*) added=0 ;;
+      *) printf '\n# Crossplane ContribFest tools\n%s\n' "$line" >>"$rc" && added=1 ;;
+    esac
+  else
+    added=0
+  fi
+  if [ $added = 1 ]; then
+    pass "$BIN_DIR is on your PATH in new terminals ($shown)"
+    this_terminal=1
+  else
+    fail "$BIN_DIR isn't on your PATH. Add this line to ${shown:-your shell startup file}, then open a new terminal:"
+    echo "      $line"
+  fi
 fi
 
 echo
 if [ $ok = 1 ]; then
   echo "You're ready for the labs."
+  [ $this_terminal = 1 ] && echo "This terminal doesn't have the new PATH yet. Run this here first, or open a new terminal:
+  $line"
 else
   echo "Fix the ✘ items above, then run ./scripts/setup.sh again."
   exit 1

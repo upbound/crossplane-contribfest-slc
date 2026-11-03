@@ -16,6 +16,7 @@ spec or status, or the pipeline context (for example an EnvironmentConfig).
 ## 📋 Prerequisites
 
 - [ ] Completed Lab 2
+- [ ] Both terminals in `~/function-lifecycle`. Every command in this lab runs there.
 
 ## ✅ Verify Lab 2 Completion
 
@@ -102,6 +103,10 @@ ls package/input   # lifecycle.fn.crossplane.io_inputs.yaml
 
 ## Step 3: Read the input and resolve the mode
 
+Add three imports to `fn.go`: `strings`,
+`github.com/crossplane/crossplane-runtime/v2/pkg/fieldpath`, and
+`github.com/upbound/function-lifecycle/input/v1beta1`, back from Lab 1.
+
 In `RunFunction`, replace the annotation lookup from Lab 2 with:
 
 ```go
@@ -155,8 +160,8 @@ func lookup(req *fnv1.RunFunctionRequest, xr *resource.Composite, ref string) (s
 }
 ```
 
-`fieldpath` is `github.com/crossplane/crossplane-runtime/v2/pkg/fieldpath`. It
-understands the `[key.with.dots]` bracket syntax.
+`fieldpath` understands the `[key.with.dots]` bracket syntax that context
+keys need.
 
 ```shell
 go mod tidy
@@ -165,7 +170,8 @@ go test ./...
 
 ## Step 4: Render from the spec and from the context
 
-Restart the function in terminal 1, then:
+Restart the function in terminal 1 (`Ctrl-C`, then
+`go run . --insecure --debug --address=127.0.0.1:9443`), then in terminal 2:
 
 ```shell
 make -C example render XR=xr-spec-mode.yaml
@@ -180,7 +186,8 @@ context, so you can test the change-freeze story without a cluster.
 
 ## ✅ Done when
 
-- `go test ./...` passes, including `ModeRefFromContext` and `AnnotationBeatsModeRef`
+- `go test ./...` passes. The new cases include `ModeRefFromContext` and
+  `AnnotationBeatsModeRef`; `go test -v ./...` lists them.
 - `xr-spec-mode.yaml` renders `ObserveOnly`, and the context render shows `Deprovision`
 
 **Bonus:** what should happen when `modeRef` and an EnvironmentConfig disagree?
@@ -188,8 +195,13 @@ context, so you can test the change-freeze story without a cluster.
 
 ## 🛟 Stuck?
 
+Jump to the finished Lab 3:
+
 ```shell
-git fetch https://github.com/upbound/function-lifecycle workshop/lab-03 && git reset --hard FETCH_HEAD
+git fetch https://github.com/upbound/function-lifecycle workshop/lab-03 && git read-tree -u --reset FETCH_HEAD
 ```
+
+This replaces your files with the end of Lab 3 and leaves your commits as
+they are. Restart the function in terminal 1 afterwards.
 
 **Next:** [Lab 4: Real pipeline and debugging](04-pipeline-debug.md)

@@ -134,10 +134,13 @@ Things to watch:
 From a directory where the previous lab went wrong (leave a compile error in
 `fn.go`), run each lab's 🛟 command against the real GitHub URL:
 
-- [ ] `workshop/lab-01`. Also try it right after `xpkg init`, before
-      `git init`: the page says to run `git init` first.
+- [ ] `workshop/lab-01`. Also try it right after a failed `xpkg init`, with
+      no repo yet: the command runs `git init` itself.
 - [ ] `workshop/lab-02`, `lab-03`, `lab-04`, `lab-05`: after each, run
-      `go test ./...` and that lab's done-when command.
+      `go test ./...` and that lab's done-when command. `git log` still shows
+      only the scaffold commit.
+- [ ] After the `workshop/lab-05` catch-up, Lab 5 Step 4 commits the whole
+      function on `pr-ready`.
 - [ ] Labs 2–4, Step 1 (`git checkout FETCH_HEAD -- fn_test.go example/`) on
       top of a clean previous tag.
 

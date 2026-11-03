@@ -51,11 +51,15 @@ Today every composition patches them by hand.
 | [5. PR-ready](labs/05-pr-ready.md) | Lint, docs, package, DCO, and open the PR | 10 min |
 | [6. On a cluster](labs/06-e2e-stretch.md) *(take-home)* | Freeze, orphan, and re-adopt on kind | 20 min |
 
-Fell behind? Every lab ends at a tag. Jump to it with:
+Fell behind? Every lab ends at a tag. From `~/function-lifecycle`, jump to it with:
 
 ```shell
-git fetch https://github.com/upbound/function-lifecycle workshop/lab-0N && git reset --hard FETCH_HEAD
+git fetch https://github.com/upbound/function-lifecycle workshop/lab-0N && git read-tree -u --reset FETCH_HEAD
 ```
+
+It replaces your files with the end of that lab and leaves your commits
+alone. Lab 1's page has its own command, for when the scaffold itself went
+wrong.
 
 ## Keep going
 

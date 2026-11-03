@@ -23,13 +23,17 @@ answers a real `crossplane composition render`.
 ## Step 1: Scaffold
 
 ```shell
-cd ~   # anywhere outside this repo
+cd ~
 crossplane xpkg init function-lifecycle function-template-go -d function-lifecycle -r
 cd function-lifecycle
 ```
 
+Your function lives in `~/function-lifecycle`. Every command from here to
+the end of Lab 5 runs in that directory, in both terminals.
+
 > **⚠️ Use `-r`**: without it `xpkg init` asks whether to run `init.sh`, and
-> the prompt fails in some terminals.
+> the prompt fails in some terminals. `xpkg init` then prints the template's
+> notes, which suggest running `./init.sh`. `-r` already did.
 
 > **⚠️ Stay out of `/tmp`**: `xpkg init` fails with `path outside base dir`
 > when the path goes through a symlink, and on macOS `/tmp` is one.
@@ -80,21 +84,25 @@ The default target is `localhost:9443`. On some networks, resolving
 ## Step 4: Commit, test, run
 
 ```shell
-git init -b main && git add -A && git commit -s -m "chore: scaffold from function-template-go"
+git init -b main && git add -A && git commit -s -m "chore: scaffold"
 go test ./...
 ```
 
-In **terminal 1**, run the function. It listens on port 9443:
+In **terminal 1**, run the function:
 
 ```shell
-go run . --insecure --debug
+go run . --insecure --debug --address=127.0.0.1:9443
 ```
 
-In **terminal 2**, render the example against it:
+`--address=127.0.0.1:9443` keeps it on your machine. The default listens on
+every network interface, which makes macOS ask whether to accept incoming
+connections.
+
+Open **terminal 2**, go to the function, and render the example against it:
 
 ```shell
-cd example
-crossplane composition render xr.yaml composition.yaml functions.yaml \
+cd ~/function-lifecycle
+crossplane composition render example/xr.yaml example/composition.yaml example/functions.yaml \
   --include-function-results --crossplane-binary=$(which crossplane-core)
 ```
 
@@ -106,7 +114,7 @@ the `$(which …)`.
 
 ## ✅ Done when
 
-The render output ends with:
+The render output includes:
 
 ```yaml
 kind: Result
@@ -117,10 +125,14 @@ and terminal 1 logs `Running function`.
 
 ## 🛟 Stuck?
 
-Run `git init -b main` first if you haven't yet, then:
+Start from the reference scaffold. It already has the renames and the
+`127.0.0.1` line:
 
 ```shell
+mkdir -p ~/function-lifecycle && cd ~/function-lifecycle && git init -b main
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-01 && git reset --hard FETCH_HEAD
 ```
+
+`git init` is harmless if the directory is already a repo.
 
 **Next:** [Lab 2: Core logic](02-core-logic.md)

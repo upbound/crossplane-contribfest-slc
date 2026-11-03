@@ -9,7 +9,7 @@ download 250 MB each over the conference Wi-Fi at the same time.
 | Tool | Version | Install |
 |---|---|---|
 | Go | 1.26+ | <https://go.dev/dl>, or `brew install go` |
-| git | any | You probably have it |
+| git | any, with a name and email set | You probably have it. If not: `git config --global user.name "Your Name"` and `git config --global user.email you@example.com` |
 
 On Windows, use [WSL2](https://learn.microsoft.com/windows/wsl/install) and do
 everything inside it.
@@ -32,11 +32,14 @@ have:
 | `function-patch-and-transform` v0.11.2 | The first step of the lab pipeline, run as a local process |
 | `golangci-lint` v2.12.0 | Lab 5. Built with your Go: a binary built with an older Go panics on newer code. |
 
-Then it renders a test composition, and builds function-template-go once so
-Go's caches are warm. After that the labs work offline.
+Then it renders a test composition, and builds function-template-go and
+function-lifecycle once, so Go's caches hold every module the labs use. After
+that the labs work offline.
 
-You're done when it prints **You're ready for the labs.** If it asks you to
-add `~/.local/bin` to your `PATH`, do that and open a new terminal.
+If `~/.local/bin` isn't on your `PATH`, it offers to add it to your shell's
+startup file. Then open a new terminal, or run the `export` line it prints.
+
+You're done when it prints **You're ready for the labs.**
 
 It downloads about 250 MB and uses about 3 GB of disk, mostly Go's build
 cache. To install somewhere else, run `BIN_DIR=/some/dir ./scripts/setup.sh`.
