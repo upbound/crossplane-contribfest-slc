@@ -15,7 +15,7 @@ answers a real `crossplane composition render`.
 
 ## 📋 Prerequisites
 
-- [ ] A Codespace from this repo, or a laptop that passes `./scripts/check-env.sh`
+- [ ] `./scripts/setup.sh` ends with `You're ready for the labs.`
 - [ ] Two terminals open
 
 ---
@@ -30,6 +30,9 @@ cd function-lifecycle
 
 > **⚠️ Use `-r`**: without it `xpkg init` asks whether to run `init.sh`, and
 > the prompt fails in some terminals.
+
+> **⚠️ Stay out of `/tmp`**: `xpkg init` fails with `path outside base dir`
+> when the path goes through a symlink, and on macOS `/tmp` is one.
 
 `init.sh` renames the module to `github.com/crossplane/function-lifecycle`. We
 are all building the same upstream function today, so point it at the real
@@ -57,14 +60,31 @@ perl -pi -e 's#github.com/crossplane/function-template-go#github.com/upbound/fun
 | `example/` | An XR, a Composition, and a Functions file for `crossplane composition render`. |
 | `Dockerfile`, `.github/workflows/ci.yml` | The runtime image and the CI that builds and pushes the package. |
 
-## Step 3: Commit, test, run
+## Step 3: Point render at your function
+
+`example/functions.yaml` tells `crossplane composition render` how to reach
+each function in the pipeline. The template already sets
+`render.crossplane.io/runtime: Development`, so render calls a process running
+on your machine instead of pulling the function's image. Add one line under it:
+
+```yaml
+  annotations:
+    # This tells crossplane render to connect to the function locally.
+    render.crossplane.io/runtime: Development
+    render.crossplane.io/runtime-development-target: 127.0.0.1:9443   # add this
+```
+
+The default target is `localhost:9443`. On some networks, resolving
+`localhost` adds about 10 seconds to every render. The IP never does.
+
+## Step 4: Commit, test, run
 
 ```shell
 git init -b main && git add -A && git commit -s -m "chore: scaffold from function-template-go"
 go test ./...
 ```
 
-In **terminal 1**, run the function. It listens on `localhost:9443`:
+In **terminal 1**, run the function. It listens on port 9443:
 
 ```shell
 go run . --insecure --debug
@@ -75,11 +95,12 @@ In **terminal 2**, render the example against it:
 ```shell
 cd example
 crossplane composition render xr.yaml composition.yaml functions.yaml \
-  --include-function-results --crossplane-version=v2.4.2
+  --include-function-results --crossplane-binary=$(which crossplane-core)
 ```
 
-`example/functions.yaml` sets `render.crossplane.io/runtime: Development`, so
-render calls your local process instead of pulling an image.
+`--crossplane-binary` runs Crossplane's render engine as a local process
+instead of in a Docker container. It takes a path, not a command name, hence
+the `$(which …)`.
 
 ---
 
@@ -95,6 +116,8 @@ message: 'Pipeline step "run-the-template": I was run with input "Hello world"!'
 and terminal 1 logs `Running function`.
 
 ## 🛟 Stuck?
+
+Run `git init` first if you haven't yet, then:
 
 ```shell
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-01 && git reset --hard FETCH_HEAD

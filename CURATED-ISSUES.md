@@ -26,10 +26,15 @@ evening, **L** needs a design discussion first.
 
 ## Across the ecosystem
 
-Checked on 2026-10-19. Look again before you start; some are old.
+Checked on 2026-10-19, and the *new* ones on 2026-11-03. Look again before you
+start; some are old.
 
 | Repo | Issue | Why it's a good start |
 |---|---|---|
+| crossplane/cli | *new*: render's default Development target `localhost:9443` stalls about 10 s per function on some networks | You saw why Lab 1 uses `127.0.0.1`. The render engine dials through gRPC's `dns` resolver; `127.0.0.1`, `[::1]`, and `passthrough:///localhost:9443` are all instant. Default to `127.0.0.1:9443`, or dial with `passthrough`. |
+| crossplane/cli | *new*: `xpkg init` fails with `path outside base dir` when the target path goes through a symlink | Reproduce with `cd /tmp && crossplane xpkg init f function-template-go -d f -r` on macOS. Resolving the base dir with `filepath.EvalSymlinks` is likely the fix. |
+| crossplane/cli | *new*: `--crossplane-binary` doesn't look bare names up on `PATH` | It's why the labs say `$(which crossplane-core)`. Small, but ask the maintainers first: it changes a flag's meaning. |
+| crossplane-contrib/function-auto-ready | *new*: `go.mod` still says `github.com/crossplane/function-auto-ready` | So `go install github.com/crossplane-contrib/function-auto-ready@latest` fails, and the labs can't run it as a local process. function-patch-and-transform already made this change. |
 | crossplane/function-template-go | [#74](https://github.com/crossplane/function-template-go/issues/74) `init.sh` has hard assumptions | You hit it in Lab 1: the module path stays `github.com/crossplane/...`, and `package/crossplane.yaml` and `.golangci.yml` aren't renamed. Stale [PR #75](https://github.com/crossplane/function-template-go/pull/75) covers part of it. |
 | crossplane/function-template-go | [#82](https://github.com/crossplane/function-template-go/issues/82) Update package metadata to v1 | Already done: the template uses `meta.pkg.crossplane.io/v1`. Comment with the evidence so it can be closed. Triage counts. |
 | crossplane/function-template-go | *new*: `.golangci.yml` uses the deprecated `gomodguard` | You saw the warning in Lab 5. Open the issue, then the PR. |

@@ -46,12 +46,16 @@ The tests are written for you. Your job is to make them pass.
 ```shell
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-02
 git checkout FETCH_HEAD -- fn_test.go example/
-go test ./...   # fails to compile: that's expected
+go test ./...   # fails: that's expected
 ```
 
 Have a look at `example/composition.yaml`. Step `compose` uses
 function-patch-and-transform to compose a Bucket, a provider-kubernetes
 Object, and a plain ConfigMap. Step `lifecycle` is yours.
+
+`example/functions.yaml` runs both functions locally: yours on port 9443,
+function-patch-and-transform on 9444. `make -C example render` starts
+function-patch-and-transform for you.
 
 ## Step 2: Map modes to policies
 
@@ -176,6 +180,10 @@ then in terminal 2:
 make -C example render XR=xr-provision.yaml
 make -C example render XR=xr-invalid.yaml   # fails closed
 ```
+
+`make` prints the render command it runs. The first render starts
+function-patch-and-transform in the background, and it keeps running until
+`make -C example stop`.
 
 ---
 

@@ -9,7 +9,7 @@ slide has speaker notes.
 
 | Time | Slides | Segment |
 |---|---|---|
-| 0:00 | cover, start, agenda | Welcome. Everyone starts a Codespace. |
+| 0:00 | cover, start, agenda | Welcome. Everyone runs `./scripts/setup.sh` (or `--check` if they did it beforehand). Pair up anyone it fails for. |
 | 0:05 | why-functions … before-after | Why functions, the ecosystem, management policies, the design |
 | 0:17 | demo | Live demo on kind (`demo/setup.sh` run beforehand; video as a fallback) |
 | 0:22 | lab1 | Lab 1, 8 min |
@@ -21,6 +21,7 @@ slide has speaker notes.
 
 ## Before Nov 11
 
+- [ ] Post the setup instructions (PREREQUISITES.md) on sched and in Crossplane Slack a week ahead
 - [ ] QR codes: the `start` slide (hub repo) and `thanks` (session feedback)
 - [ ] Crossplane logo on the cover (the design system's brand asset path wasn't found)
 - [ ] Record the demo as a Wi-Fi fallback

@@ -15,7 +15,7 @@ then delete an XR without deleting what it manages.
 
 ## 📋 Prerequisites
 
-- [ ] Docker, kind, helm, and kubectl (the Codespace has all four)
+- [ ] Docker, kind, helm, and kubectl. `setup.sh` doesn't install these.
 - [ ] About 4 GB of free Docker disk
 
 ---
@@ -28,7 +28,7 @@ From the root of this repo:
 ./demo/setup.sh
 ```
 
-This creates a kind cluster with Crossplane 2.4.2, provider-kubernetes, and
+This creates a kind cluster with Crossplane 2.4.3, provider-kubernetes, and
 three functions: patch-and-transform, lifecycle, and auto-ready. To use your
 own build instead of the released package, push it first and then run:
 

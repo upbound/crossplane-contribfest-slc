@@ -28,18 +28,37 @@ git fetch https://github.com/upbound/function-lifecycle workshop/lab-0N && git r
 | 4 | `workshop/lab-03` |
 | 5 | `workshop/lab-04` |
 
+## Setup
+
+Everyone runs the labs on their own laptop with `./scripts/setup.sh`: Go, the
+crossplane CLI, Crossplane itself as the render engine, and
+function-patch-and-transform as a local process. Nobody needs Docker until
+Lab 6.
+
+- `./scripts/setup.sh --check` checks a laptop without installing anything,
+  and ends with a render smoke test.
+- No laptop, or setup won't work: pair them up, or have them open the hub repo
+  in a GitHub Codespace and run `./scripts/setup.sh` there.
+
 ## Common problems
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `crossplane-core isn't on your PATH`, or `command not found: crossplane` after setup | `~/.local/bin` isn't on `PATH` | Add `export PATH="$HOME/.local/bin:$PATH"` to `~/.zshrc` or `~/.bashrc`, then open a new terminal |
 | `xpkg init` fails with `failed to read from stdin: EOF` | The `init.sh` prompt | Add `-r` |
-| `go test` doesn't compile after `git checkout FETCH_HEAD -- fn_test.go` | Expected: the tests are ahead of the code | That's the lab. Read the compiler error for what's missing. |
-| render: `connection refused` / `Unavailable` on `localhost:9443` | Function isn't running | `go run . --insecure --debug` in terminal 1 |
+| `xpkg init` fails with `path outside base dir` | The path goes through a symlink, such as `/tmp` on macOS | Run it under `~` |
+| `go test` fails right after `git checkout FETCH_HEAD -- fn_test.go` | Expected: the tests are ahead of the code | That's the lab. The `-want`/`+got` diff shows what's missing. |
+| render: `--crossplane-binary: stat …/crossplane-core: no such file or directory` | The flag takes a path, not a command name | `--crossplane-binary=$(which crossplane-core)`, or use `make -C example render` |
+| render: `Cannot connect to the Docker daemon` | `--crossplane-binary` is missing, so render fell back to Docker | Add `--crossplane-binary=$(which crossplane-core)` |
+| render takes 10+ seconds | `functions.yaml` targets `localhost`, which resolves slowly on some networks | Set `render.crossplane.io/runtime-development-target: 127.0.0.1:9443` (Lab 1, Step 3) |
+| render: `connection refused` / `Unavailable` on `127.0.0.1:9443` | The function isn't running | `go run . --insecure --debug` in terminal 1 |
+| render: `connection refused` on `127.0.0.1:9444` | function-patch-and-transform isn't running | `make -C example render` starts it. For hand renders, run `make -C example serve`. |
 | render shows old behavior | The function wasn't restarted after a code change | `Ctrl-C` and `go run` again. `make -C example test` builds fresh. |
-| `bind: address already in use` | An old function is still running | `pkill -f function-lifecycle` or `lsof -ti :9443 \| xargs kill` |
-| render is slow or pulls `crossplane/crossplane` | Image not pre-pulled, or no `--crossplane-version` | Pass `--crossplane-version=v2.4.2`. Run `./scripts/check-env.sh`. |
-| `Cannot connect to the Docker daemon` | Docker not running. In a Codespace, docker-in-docker is still starting. | Start Docker, or wait 30s in the Codespace. |
-| `no space left on device` | Docker disk full | `docker system prune` (ask first, it deletes their images) |
+| `make test`: `Something is already listening on port 9443` | `go run` is still running in terminal 1 | `Ctrl-C` it, then `make -C example test` again |
+| `bind: address already in use` | An old function is still running | `lsof -ti :9443 \| xargs kill`. For port 9444: `make -C example stop`. |
+| macOS asks whether to accept incoming network connections | The firewall sees a new binary after each `go run` | Click Allow. Or run `go run . --insecure --debug --address=127.0.0.1:9443`, which listens on loopback only. |
+| `no space left on device` | Go's build cache is about 2 GB | `go clean -cache` frees it. The next build is slower. |
+| Lab 5 `docker build` fails on `RUN --mount` or `BUILDPLATFORM` | Docker without BuildKit, for example Colima without `buildx` | Skip it. CI builds the package. |
 | `unknown field` in input | `request.GetInput` rejects unknown fields | Check the input YAML against `input/v1beta1/input.go`, and rerun `go generate ./...` |
 | `-want rsp, +got rsp` diff | A test failure | Lines with `-` are expected, `+` are actual. Usually a message string or a missing condition. |
 | `crossplane beta trace: unknown command` | CLI v2.5 renamed it | `crossplane resource trace` |

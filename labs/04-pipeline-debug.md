@@ -35,8 +35,12 @@ git fetch https://github.com/upbound/function-lifecycle workshop/lab-04
 git checkout FETCH_HEAD -- fn_test.go example/
 ```
 
-The composition now has a third step, function-auto-ready. Our function sits in
-the middle: after the steps that compose, before the step that only reads.
+You also get `example/test.sh`, a render test harness, and new `make` targets
+to drive it. You'll use them in Step 4.
+
+> 💡 In a real pipeline, function-lifecycle goes after every step that
+> composes resources, and before steps that only read them, such as
+> function-auto-ready.
 
 ## Step 2: Report the source
 
@@ -102,9 +106,9 @@ make -C example serve        # terminal 1: function with --debug logs
 
 cd example                   # terminal 2
 crossplane composition render xr-observe-only.yaml composition.yaml functions.yaml \
-  --crossplane-version=v2.4.2 -r -x | less     # results + full XR with the LifecycleMode condition
+  --crossplane-binary=$(which crossplane-core) -r -x | less     # results + full XR with the LifecycleMode condition
 crossplane composition render xr.yaml composition-environment.yaml functions.yaml \
-  --crossplane-version=v2.4.2 -c \
+  --crossplane-binary=$(which crossplane-core) -c \
   --context-values='apiextensions.crossplane.io/environment={"managementMode":"Deprovision"}'   # kind: Context
 ```
 

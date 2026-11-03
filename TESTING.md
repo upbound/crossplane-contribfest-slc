@@ -1,0 +1,194 @@
+# Manual test plan
+
+Goal: by **Nov 10**, show that someone with only Go and git can get from this
+repo to an open PR in 80 minutes, on macOS and Linux, with no Docker, and that
+the session survives slow conference Wi-Fi.
+
+## What's already verified, and what isn't
+
+Checked on 2026-11-03 on an arm64 Mac (Go 1.27.1, zsh, Docker deliberately
+unreachable):
+
+- Every `workshop/lab-0N` tag builds and passes `go test`, and its renders give
+  the expected output with both the stock macOS `make` 3.81 and GNU make 4.4.
+- Labs 1–5 walked through as an attendee would. The lab pages' commands were
+  used as written, the reference repo was a local path, and each lab's code was
+  taken from its tag.
+- `scripts/setup.sh` from cold caches: done in 72 seconds (about 235 MB downloaded, 3 GB of disk), smoke test
+  passes, and `--check` passes three times in a row.
+- golangci-lint finds 17 issues on the Lab 4 code and 0 on Lab 5.
+
+These can't be checked without you:
+
+- Clean machines: Linux, WSL2, Intel Mac, and a laptop that has never built Go.
+- Anything that needs GitHub: catch-up from the real URL, Lab 5 PRs and CI,
+  and setup warming the function-lifecycle modules.
+- A newcomer's pace against the time boxes.
+- Lab 6 and the demo on kind.
+- How the deck renders on the venue projector.
+- Conference-like network conditions.
+
+## 0. Unblock first
+
+Sections 3–6 need these:
+
+- [ ] Push `upbound/function-lifecycle` with its tags (`git push origin main --tags`)
+      and make it public
+- [ ] Make this hub repo public, or give testers access
+- [ ] Decide the registry, then release v0.1.0. CI pushes to ghcr.io, but
+      `example/functions.yaml` and `demo/setup.sh` say `xpkg.upbound.io`.
+- [ ] File the curated issues on function-lifecycle with the `contribfest`
+      label, plus a pinned tracking issue
+
+## 1. Setup on clean machines
+
+Have a different person run each machine if you can. Start from "Go and git
+installed, nothing else", then follow [PREREQUISITES.md](PREREQUISITES.md)
+word for word.
+
+| Machine | Who | Notes |
+|---|---|---|
+| macOS arm64, stock `make`, zsh, no Docker | | The most common attendee laptop |
+| macOS Intel | | `darwin_amd64` downloads |
+| Linux amd64 (Ubuntu or Fedora), bash | | `sha256sum` path; distro Go may set `GOTOOLCHAIN=local` |
+| Windows 11 + WSL2 Ubuntu | | |
+| GitHub Codespace on this repo, default image | | The fallback in PREREQUISITES |
+
+For each one:
+
+- [ ] Run `./scripts/setup.sh`. Time it, note any `✘` or `!`, and check its
+      summary for the Go version and download speed.
+- [ ] Follow the `PATH` hint if it shows one, open a new terminal, and run
+      `./scripts/setup.sh --check`. It ends with **You're ready for the labs.**
+- [ ] Run it a second time. It takes seconds and installs nothing.
+- [ ] `which crossplane crossplane-core function-patch-and-transform golangci-lint`
+      all resolve.
+
+Edge cases, once each, on any machine:
+
+- [ ] Go 1.25 with `GOTOOLCHAIN=auto` (the default): setup warns, and Go
+      downloads 1.26 by itself.
+- [ ] An old crossplane CLI earlier on `PATH`: setup installs v2.5 and warns
+      that the old one comes first.
+- [ ] A golangci-lint built with an older Go earlier on `PATH` (Homebrew's,
+      or an old release binary): setup builds one with your Go and warns.
+- [ ] `BIN_DIR=/some/dir ./scripts/setup.sh` installs there.
+
+## 2. Offline after setup
+
+The labs should only need the network for `xpkg init`, which clones the
+template, and for `git fetch`.
+
+- [ ] Run Lab 1, Step 1, then turn Wi-Fi off.
+- [ ] Do the rest of Lab 1, and Labs 2–4 using the catch-up tags you fetched
+      beforehand. `go test`, `go generate`, `go mod tidy`, `make render`,
+      `make test`, and `golangci-lint` must all work.
+- [ ] Note anything that hangs or downloads.
+
+## 3. Timed attendee walkthrough
+
+Best with a colleague who hasn't seen the labs, and you only watching. Use the
+lab pages, not this file. Record times against the time boxes.
+
+| Lab | Box | Actual | Done-when met | Notes |
+|---|---|---|---|---|
+| 1. Scaffold | 8 min | | | |
+| 2. Core logic | 15 min | | | |
+| 3. Generalize | 10 min | | | |
+| 4. Debug | 8 min | | | |
+| 5. PR-ready | 10 min | | | |
+
+Things to watch:
+
+- [ ] **Lab 1**:
+  - Do they find the line to add to `example/functions.yaml`?
+  - Render takes about a second, not 10+.
+  - Terminal 1 logs `Running function`.
+- [ ] **Lab 2**:
+  - `go test` fails right after the checkout, as the page says.
+  - `make -C example render` prints the command and starts
+    function-patch-and-transform.
+  - `xr-invalid.yaml` fails closed.
+- [ ] **Lab 3**:
+  - `go generate` writes `package/input/lifecycle.fn.crossplane.io_inputs.yaml`.
+  - `go mod tidy` works.
+  - The spec render shows `ObserveOnly`; the context render shows `Deprovision`.
+- [ ] **Lab 4**:
+  - `make -C example test` gives 7 × PASS.
+  - Running it while `go run` is still up gives the "already listening" message.
+  - The hand renders with `-r -x` and `-c` work while `make serve` runs.
+- [ ] **Lab 5**:
+  - golangci-lint reports 17 findings, then 0 after the fixes.
+  - Path A: `gh repo create` and `gh pr create` work, and CI starts. Note how
+    long the multi-arch build takes.
+- [ ] **Lab 5, Path B**: fork upstream, branch, PR against a real `contribfest`
+      issue, then close the PR.
+- [ ] Where did they hesitate or misread? Fix the page, not the person.
+
+## 4. Catch-up from every lab
+
+From a directory where the previous lab went wrong (leave a compile error in
+`fn.go`), run each lab's 🛟 command against the real GitHub URL:
+
+- [ ] `workshop/lab-01`. Also try it right after `xpkg init`, before
+      `git init`: the page says to run `git init` first.
+- [ ] `workshop/lab-02`, `lab-03`, `lab-04`, `lab-05`: after each, run
+      `go test ./...` and that lab's done-when command.
+- [ ] Labs 2–4, Step 1 (`git checkout FETCH_HEAD -- fn_test.go example/`) on
+      top of a clean previous tag.
+
+## 5. Things that will go wrong in the room
+
+Reproduce each [HELPERS.md](HELPERS.md) row once, so you and the helpers
+recognize the message and know the fix works:
+
+- [ ] `localhost:9443` as the target: render takes 10+ seconds, or doesn't
+      on your network. Note which.
+- [ ] Render without `--crossplane-binary`: the Docker error.
+- [ ] `--crossplane-binary=crossplane-core` without `$(which …)`: the `stat`
+      error.
+- [ ] `xpkg init` under `/tmp` on macOS: `path outside base dir`.
+- [ ] `~/.local/bin` not on `PATH`.
+- [ ] Port 9443 and 9444 in use; `make -C example stop`.
+- [ ] **macOS firewall**: with the firewall on (System Settings → Network →
+      Firewall), does `go run . --insecure --debug` trigger the "accept
+      incoming connections" prompt? Does `--address=127.0.0.1:9443` avoid it?
+      Does clicking Deny still let render connect? Update the HELPERS row
+      with what you find.
+
+## 6. Demo and Lab 6 on kind (presenter laptop)
+
+- [ ] `./demo/setup.sh` from scratch. Time it, since it pulls images.
+- [ ] Run the demo slide's script end to end: freeze, then orphan, then adopt.
+      Aim for under 5 minutes.
+- [ ] Run Lab 6 as written, then Full mode: deleting the XR deletes the
+      ConfigMap.
+- [ ] Record the demo video as the Wi-Fi fallback.
+
+## 7. Deck
+
+- [ ] Look through every slide in the Slides artifact. Check that the code on
+      the `lab1` card fits, and the `start` slide.
+- [ ] Add the QR codes (`start`, `thanks`) and scan them from the back of a room.
+- [ ] Export the PDF for sched.
+- [ ] Rehearse the talk segments with a timer. The target is about 17 minutes
+      before the labs.
+
+## 8. The day before (Nov 10)
+
+- [ ] **Template drift**: `xpkg init` a fresh function and diff it against
+      `workshop/lab-01`. Only `go.mod`, `go.sum`, and the two comment lines in
+      `example/functions.yaml` should differ. A change to `fn.go`, `main.go`,
+      `init.sh`, or `example/` breaks Lab 1 or 2.
+- [ ] New releases since Nov 3? Check the crossplane CLI, Crossplane core,
+      function-patch-and-transform, and Go. The pins hold, but read the
+      release notes for `render` changes.
+- [ ] The ecosystem issues in CURATED-ISSUES are still open.
+- [ ] Every helper ran `./scripts/setup.sh --check` and has read HELPERS.md.
+- [ ] The demo cluster is up, and the video is on the laptop.
+
+## Results
+
+| Date | Machine | Go | Setup time | ✘ / ! | Lab 1–5 times | Problems found |
+|---|---|---|---|---|---|---|
+| 2026-11-03 | macOS arm64, zsh, no Docker | 1.27.1 | ~1 min, cold | — | scripted | localhost costs 10 s per function; `--crossplane-binary` needs a path; `xpkg init` fails through symlinks; golangci-lint 2.12.0 release binary panics on Go 1.27. All fixed or worked around. |

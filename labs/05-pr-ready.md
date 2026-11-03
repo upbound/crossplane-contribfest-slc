@@ -16,7 +16,7 @@ read your code, then open a pull request.
 ## 📋 Prerequisites
 
 - [ ] Completed Lab 4
-- [ ] `gh auth status` shows you're logged in (Codespaces does this for you)
+- [ ] `gh auth status` shows you're logged in, or use the browser for the PR
 
 ## ✅ Verify Lab 4 Completion
 
@@ -67,12 +67,19 @@ go test ./...
   Marketplace show these.
 - Delete the template leftovers: `NOTES.txt` and `init.sh`.
 
-## Step 3: Check the package builds
+## Step 3: Check the package builds (optional, needs Docker)
+
+CI builds the multi-arch runtime image and the package on every pull request,
+so you can skip this step. If you have Docker with BuildKit, build it locally:
 
 ```shell
 docker build . --tag=runtime
 crossplane xpkg build -f package --embed-runtime-image=runtime
 ```
+
+> **⚠️** If `docker build` fails on `RUN --mount` or an empty
+> `BUILDPLATFORM`, your Docker has no BuildKit. Colima without `buildx` is
+> one example. Skip the step and let CI build it.
 
 ## Step 4: Commit and open a PR
 

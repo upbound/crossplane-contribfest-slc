@@ -3,10 +3,17 @@
 **KubeCon + CloudNativeCon North America 2026** · Salt Lake City · Nov 11,
 11:00–12:20 · Salt Palace, Level 2, 255 D
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/upbound/crossplane-contribfest-slc)
+**Set up before the session.** Install Go 1.26+, then:
 
-**Start your Codespace now.** It takes about a minute, and everything is
-preinstalled. Working locally instead? See [PREREQUISITES.md](PREREQUISITES.md).
+```shell
+git clone https://github.com/upbound/crossplane-contribfest-slc
+cd crossplane-contribfest-slc
+./scripts/setup.sh
+```
+
+It takes about five minutes, needs no Docker, and ends with **You're ready for
+the labs.** Details, and what to do without a laptop:
+[PREREQUISITES.md](PREREQUISITES.md).
 
 ---
 
@@ -63,4 +70,5 @@ git fetch https://github.com/upbound/function-lifecycle workshop/lab-0N && git r
 
 ## For helpers
 
-See [HELPERS.md](HELPERS.md).
+See [HELPERS.md](HELPERS.md). To test the materials before the event, see
+[TESTING.md](TESTING.md).
