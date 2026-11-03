@@ -168,8 +168,9 @@ recognize the message and know the fix works:
 ## 7. Deck
 
 - [ ] Look through every slide in the Slides artifact. Check that the code on
-      the `lab1` card fits, and the `start` slide.
-- [ ] Add the QR codes (`start`, `thanks`) and scan them from the back of a room.
+      the `lab1` and `lab5` cards fits, and the logo on the cover.
+- [ ] Scan the `start` QR code from the back of a room. Add the `thanks`
+      feedback QR code once the sched link exists, and scan that too.
 - [ ] Export the PDF for sched.
 - [ ] Rehearse the talk segments with a timer. The target is about 17 minutes
       before the labs.

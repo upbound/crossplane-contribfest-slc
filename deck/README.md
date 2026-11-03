@@ -22,7 +22,8 @@ slide has speaker notes.
 ## Before Nov 11
 
 - [ ] Post the setup instructions (PREREQUISITES.md) on sched and in Crossplane Slack a week ahead
-- [ ] QR codes: the `start` slide (hub repo) and `thanks` (session feedback)
-- [ ] Crossplane logo on the cover (the design system's brand asset path wasn't found)
+- [x] QR code on the `start` slide (hub repo; decoded and checked on 2026-11-03)
+- [ ] QR code on the `thanks` slide (session feedback): needs the sched link
+- [x] Crossplane logo on the cover (white horizontal logo from cncf/artwork)
 - [ ] Record the demo as a Wi-Fi fallback
 - [ ] Names of the table helpers for the cover's speaker notes

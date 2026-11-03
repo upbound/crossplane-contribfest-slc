@@ -117,7 +117,7 @@ and terminal 1 logs `Running function`.
 
 ## 🛟 Stuck?
 
-Run `git init` first if you haven't yet, then:
+Run `git init -b main` first if you haven't yet, then:
 
 ```shell
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-01 && git reset --hard FETCH_HEAD
