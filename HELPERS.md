@@ -60,8 +60,7 @@ Lab 6.
 | render: `Cannot connect to the Docker daemon` | `--crossplane-binary` is missing, so render fell back to Docker | Add `--crossplane-binary=$(which crossplane-core)` |
 | render takes 10+ seconds | `functions.yaml` targets `localhost`, which resolves slowly on some networks | Set `render.crossplane.io/runtime-development-target: 127.0.0.1:9443` (Lab 1, Step 3) |
 | `make: *** example: No such file or directory` or `cd: no such file or directory: example` | The terminal isn't in `~/function-lifecycle` | `cd ~/function-lifecycle`. Every lab command runs there. |
-| render: `connection refused` / `Unavailable` on `127.0.0.1:9443` | The function isn't running | `go run . --insecure --debug --address=127.0.0.1:9443` in terminal 1 |
-| render: `connection refused` on `127.0.0.1:9444` | function-patch-and-transform isn't running | `make -C example render` starts it. For hand renders, run `make -C example pt` first. |
+| render hangs about a minute, then `crossplane internal render returned error with output: : signal: killed` | A function isn't listening: yours on 9443, or function-patch-and-transform on 9444. The output is the same for both. | `lsof -nP -iTCP:9443 -iTCP:9444 -sTCP:LISTEN` shows which is missing. Start the function in terminal 1 with `go run . --insecure --debug --address=127.0.0.1:9443`. `make -C example render` starts 9444 by itself; before a hand render, run `make -C example pt`. |
 | render shows old behavior | The function wasn't restarted after a code change | `Ctrl-C` and `go run` again. `make -C example test` builds fresh. |
 | `make test`: `Something is already listening on port 9443` | `go run` or `make serve` is still running in terminal 1 | `Ctrl-C` it, then `make -C example test` again |
 | `bind: address already in use` | An old function is still running | `lsof -ti :9443 \| xargs kill`. For port 9444: `make -C example stop`. |

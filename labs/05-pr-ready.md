@@ -22,8 +22,10 @@ read your code, then open a pull request.
 ## ✅ Verify Lab 4 Completion
 
 ```shell
-make -C example test   # 7 x PASS
+make -C example test
 ```
+
+It prints `PASS` for all seven examples.
 
 ---
 
@@ -33,14 +35,18 @@ CI runs golangci-lint. Run the same version locally, then let Go fix what it
 can:
 
 ```shell
-golangci-lint run ./...   # 17 issues
+golangci-lint run ./...
 go fix ./...
 ```
 
-`go fix` applies the 12 `modernize` fixes: Go 1.26 accepts `new("text")`, so
-every `ptr("text")` in `fn_test.go` becomes `new("text")`. Then delete the
-`ptr` helper in `fn_test.go`, with the `//go:fix inline` line `go fix` put
-above it. Nothing calls it any more.
+Lint reports 17 issues. `go fix` applies the 12 `modernize` fixes: Go 1.26
+accepts `new("text")`, so every `ptr("text")` in `fn_test.go` becomes
+`new("text")`.
+
+Now delete the `ptr` helper in `fn_test.go`: the `func ptr` line and the
+comment lines above it, from `// ptr returns a pointer to the supplied value.`
+down. `go fix` added `//go:fix inline` to that comment. Until the helper is
+gone, lint also reports it as `unused` and flags the directive.
 
 The other five are yours:
 
@@ -51,9 +57,11 @@ The other five are yours:
 | `goconst` | `fn_test.go`: `bucket`, `LifecycleMode`, and `ObserveOnly` repeated | Table tests repeat literals on purpose. In `.golangci.yml`, add `goconst` to the linters excluded for `_test(ing)?\.go`, the list that starts with `containedctx`. |
 
 ```shell
-golangci-lint run ./...   # 0 issues
+golangci-lint run ./...
 go test ./...
 ```
+
+Lint reports `0 issues`, and the tests pass.
 
 > 💡 The warning about `gomodguard` being deprecated comes from the template's
 > `.golangci.yml`. That's another upstream fix you could make.
@@ -62,12 +70,13 @@ go test ./...
 
 Users read the README. Registries and the Marketplace show the
 `meta.crossplane.io` annotations in `package/crossplane.yaml`. A good README
-takes longer than this lab, so start from the reference and make it yours:
+takes longer than this lab, so start from the reference and make it yours.
+These commands also delete two template leftovers, `NOTES.txt` and `init.sh`:
 
 ```shell
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-05
 git checkout FETCH_HEAD -- README.md package/crossplane.yaml
-rm NOTES.txt init.sh   # template leftovers
+rm NOTES.txt init.sh
 ```
 
 Read both. The README covers what a user needs: what the function does, the
@@ -116,6 +125,11 @@ gh pr create --web
 repo's PR template. Work through its checklist, then create the PR. Watch CI
 run lint, tests, and a multi-arch package build on it.
 
+> 💡 Pushing `main` also starts CI there. On a new repo, its `push` job
+> usually fails with a 403: it publishes the package to ghcr.io, and new repos
+> don't give workflows permission to write packages. Your PR doesn't run that
+> job, so ignore it.
+
 **Path B: upstream** (fast finishers). Pick an issue labelled `contribfest` on
 [upbound/function-lifecycle](https://github.com/upbound/function-lifecycle/issues?q=is%3Aissue+is%3Aopen+label%3Acontribfest)
 and comment that you're taking it. Then work in a fresh fork, next to your
@@ -125,9 +139,13 @@ lab copy:
 mkdir -p ~/upstream && cd ~/upstream
 gh repo fork upbound/function-lifecycle --clone && cd function-lifecycle
 git switch -c <issue-number>-short-name
-# … test first, then code …
+```
+
+Write the test first, then the code. Then:
+
+```shell
 make -C example test && golangci-lint run ./...
-git add -A && git commit -s -m "feat: …"
+git add -A && git commit -s -m "feat: <what it does>"
 git push -u origin HEAD
 gh pr create --web
 ```
@@ -139,6 +157,13 @@ Fill in the PR template. "Fixes #N" links the issue.
 ## ✅ Done when
 
 You have a PR URL, and its CI is green or running.
+
+When you're done for the day, stop function-patch-and-transform, which
+`make` left running:
+
+```shell
+make -C ~/function-lifecycle/example stop
+```
 
 ## 🛟 Stuck?
 

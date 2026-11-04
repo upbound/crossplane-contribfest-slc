@@ -23,9 +23,11 @@ pipeline.
 ## ✅ Verify Lab 3 Completion
 
 ```shell
-go test ./...                                      # ok
-make -C example render XR=xr-spec-mode.yaml        # ObserveOnly
+go test ./...
+make -C example render XR=xr-spec-mode.yaml
 ```
+
+Tests pass, and the render shows `ObserveOnly`.
 
 ---
 
@@ -113,14 +115,17 @@ In terminal 1, run the function with debug logs:
 make -C example serve
 ```
 
-In terminal 2, render by hand with the inspection flags:
+In terminal 2, render by hand with the inspection flags. This one shows the
+results from every step, and the XR with its `LifecycleMode` condition:
 
 ```shell
-# Results from every step, and the XR with its LifecycleMode condition
 crossplane composition render example/xr-observe-only.yaml example/composition.yaml \
   example/functions.yaml --crossplane-binary=$(which crossplane-core) -r -x | less
+```
 
-# The pipeline context, as kind: Context
+This one shows the pipeline context, as `kind: Context`:
+
+```shell
 crossplane composition render example/xr.yaml example/composition-environment.yaml \
   example/functions.yaml --crossplane-binary=$(which crossplane-core) -c \
   --context-values='apiextensions.crossplane.io/environment={"managementMode":"Deprovision"}'

@@ -41,39 +41,52 @@ FN_PACKAGE=ghcr.io/<you>/function-lifecycle:<tag> ./demo/setup.sh
 ```shell
 kubectl apply -f demo/manifests/xr.yaml
 crossplane resource trace app my-app
-kubectl get configmap my-app-config -o yaml   # created through a provider-kubernetes Object
+kubectl get configmap my-app-config -o yaml
 ```
 
-The `config` Object is a managed resource. The `settings` ConfigMap is a plain
-object, so the function skips it.
+A provider-kubernetes Object, `config`, created that ConfigMap. The Object is
+a managed resource. The `settings` ConfigMap is a plain object, so the
+function skips it.
 
 ## Step 3: Freeze it
 
 ```shell
 kubectl annotate app my-app lifecycle.fn.crossplane.io/mode=ObserveOnly
 kubectl get objects.kubernetes.m.crossplane.io -l crossplane.io/composite=my-app \
-  -o jsonpath='{.items[*].spec.managementPolicies}'   # ["Observe"]
+  -o jsonpath='{.items[*].spec.managementPolicies}'
+```
 
-# Drift isn't reverted while the XR is frozen
+The Object now has `["Observe"]`. Change the ConfigMap behind Crossplane's back,
+and wait for a poll:
+
+```shell
 kubectl patch configmap my-app-config --type merge -p '{"data":{"owner":"someone-else"}}'
-sleep 90 && kubectl get configmap my-app-config -o jsonpath='{.data.owner}'   # someone-else
+sleep 90 && kubectl get configmap my-app-config -o jsonpath='{.data.owner}'
+```
 
-# Unfreeze: Crossplane reverts the drift on the next poll
+It still says `someone-else`: drift isn't reverted while the XR is frozen.
+Unfreeze it, and Crossplane reverts the drift on the next poll:
+
+```shell
 kubectl annotate app my-app lifecycle.fn.crossplane.io/mode-
 ```
 
 ## Step 4: Delete the XR, keep the resource
 
+Switch to Provision, which never deletes, and wait until the Object has the
+new policies:
+
 ```shell
 kubectl annotate app my-app lifecycle.fn.crossplane.io/mode=Provision --overwrite
-
-# Phase 1: wait until the Object has the new policies
 kubectl wait objects.kubernetes.m.crossplane.io -l crossplane.io/composite=my-app \
   --for=jsonpath='{.spec.managementPolicies[3]}'=LateInitialize --timeout 2m
+```
 
-# Phase 2: delete
+Then delete the XR. The ConfigMap is still there:
+
+```shell
 kubectl delete app my-app
-kubectl get configmap my-app-config   # still there
+kubectl get configmap my-app-config
 ```
 
 > **⚠️ Two phases matter.** If you delete before Crossplane applies the new
@@ -83,8 +96,10 @@ kubectl get configmap my-app-config   # still there
 
 ```shell
 kubectl apply -f demo/manifests/xr.yaml
-crossplane resource trace app my-app   # the new Object adopts the existing ConfigMap
+crossplane resource trace app my-app
 ```
+
+The new Object adopts the existing ConfigMap.
 
 ## Clean up
 

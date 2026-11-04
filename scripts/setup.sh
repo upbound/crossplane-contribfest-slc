@@ -149,7 +149,8 @@ lint=$(PATH=$ORIG_PATH command -v golangci-lint || true)
 lint_info=$([ -n "$lint" ] && "$lint" version 2>/dev/null)
 lint_go=$(echo "$lint_info" | sed -nE 's/.*built with go([0-9]+\.[0-9]+).*/\1/p')
 if [[ $lint_info == *"version v2."* || $lint_info == *"version 2."* ]] && [ -n "$lint_go" ] && version_ge "$lint_go" "$go_minor"; then
-  pass "golangci-lint $("$lint" version --short 2>/dev/null), built with go$lint_go ($lint)"
+  short=$("$lint" version --short 2>/dev/null)
+  pass "golangci-lint v${short#v}, built with go$lint_go ($lint)"
 elif [ $CHECK_ONLY = 1 ]; then
   fail "golangci-lint v2 built with go$go_minor or newer: run without --check to install it"
 else
@@ -243,7 +244,9 @@ if [ $CHECK_ONLY = 0 ]; then
     tail -5 "$tmp/init.log" "$tmp/warm.log" 2>/dev/null
     fail "couldn't build function-template-go"
   fi
-  if git clone -q --depth 1 "$FN_REPO" "$tmp/fn" 2>/dev/null; then
+  # The last workshop tag, not main: catch-ups bring in the tags' module
+  # versions, and main may have moved on since.
+  if git clone -q --depth 1 --branch workshop/lab-05 "$FN_REPO" "$tmp/fn" 2>/dev/null; then
     if (cd "$tmp/fn" && go mod download && go mod tidy && go test ./...) >/dev/null 2>&1; then
       pass "function-lifecycle modules"
     else
@@ -305,8 +308,10 @@ fi
 echo
 if [ $ok = 1 ]; then
   echo "You're ready for the labs."
-  [ $this_terminal = 1 ] && echo "This terminal doesn't have the new PATH yet. Run this here first, or open a new terminal:
-  $line"
+  if [ $this_terminal = 1 ]; then
+    echo "This terminal doesn't have the new PATH yet. Run this here first, or open a new terminal:"
+    echo "  $line"
+  fi
 else
   echo "Fix the ✘ items above, then run ./scripts/setup.sh again."
   exit 1

@@ -23,8 +23,10 @@
 ## ✅ Verify Lab 1 Completion
 
 ```shell
-go test ./...   # ok
+go test ./...
 ```
+
+It passes.
 
 ---
 
@@ -47,8 +49,10 @@ The tests are written for you. Your job is to make them pass.
 ```shell
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-02
 git checkout FETCH_HEAD -- fn_test.go example/
-go test ./...   # fails: that's expected
+go test ./...
 ```
+
+The tests fail. That's expected: they describe code you haven't written yet.
 
 Have a look at `example/composition.yaml`. Step `compose` uses
 function-patch-and-transform to compose a Bucket, a provider-kubernetes
@@ -145,9 +149,9 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	// TODO 1: start from ModeFull. If the XR has the AnnotationMode
 	// annotation, use its value. Hint: xr.Resource.GetAnnotations().
 
-	// TODO 2: get the policies with mode.Policies(). On error return a fatal
-	// result wrapped as "invalid <annotation> annotation". Fail closed: a typo
-	// must never fall back to Full.
+	// TODO 2: get the policies with mode.Policies(). On error, return
+	// response.Fatal(rsp, errors.Wrapf(err, "invalid %s annotation", AnnotationMode)).
+	// Fail closed: a typo must never fall back to Full.
 
 	desired, err := request.GetDesiredComposedResources(req)
 	if err != nil {
@@ -195,10 +199,10 @@ Read the failures: `-want` is the expected response, `+got` is yours.
 
 ## Step 5: Render the real pipeline
 
-Restart the function in terminal 1 so it runs your new code:
+Restart the function in terminal 1 so it runs your new code. Press `Ctrl-C`,
+then:
 
 ```shell
-# Ctrl-C, then:
 go run . --insecure --debug --address=127.0.0.1:9443
 ```
 
@@ -206,12 +210,16 @@ Then in terminal 2:
 
 ```shell
 make -C example render XR=xr-provision.yaml
-make -C example render XR=xr-invalid.yaml   # fails closed
+make -C example render XR=xr-invalid.yaml
 ```
 
 `make` prints the render command it runs. The first render starts
 function-patch-and-transform in the background, and it keeps running until
 `make -C example stop`.
+
+The second render fails closed. Its mode is `Orphan`, which doesn't exist, so
+the function returns a fatal result, render exits with an error, and `make`
+reports `Error 1`. That's the behavior you want.
 
 ---
 

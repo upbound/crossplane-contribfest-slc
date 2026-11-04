@@ -108,7 +108,11 @@ crossplane composition render example/xr.yaml example/composition.yaml example/f
 
 `--crossplane-binary` runs Crossplane's render engine as a local process
 instead of in a Docker container. It takes a path, not a command name, hence
-the `$(which …)`.
+the `$(which …)`. `-r` is short for `--include-function-results`.
+
+> **⚠️** If render hangs for about a minute and then fails with
+> `signal: killed`, nothing is listening on `127.0.0.1:9443`. Check that the
+> function is running in terminal 1.
 
 ---
 

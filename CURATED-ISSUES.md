@@ -32,6 +32,7 @@ start; some are old.
 | Repo | Issue | Why it's a good start |
 |---|---|---|
 | crossplane/cli | *new*: render's default Development target `localhost:9443` stalls about 10 s per function on some networks | You saw why Lab 1 uses `127.0.0.1`. The render engine dials through gRPC's `dns` resolver; `127.0.0.1`, `[::1]`, and `passthrough:///localhost:9443` are all instant. Default to `127.0.0.1:9443`, or dial with `passthrough`. |
+| crossplane/cli | *new*: render waits a minute, then fails with `signal: killed`, when a Development function isn't listening | Reproduce by rendering with the function stopped. Failing fast with "can't reach function-lifecycle at 127.0.0.1:9443" would save everyone in the room a minute and a guess. |
 | crossplane/cli | *new*: `xpkg init` fails with `path outside base dir` when the target path goes through a symlink | Reproduce with `cd /tmp && crossplane xpkg init f function-template-go -d f -r` on macOS. Resolving the base dir with `filepath.EvalSymlinks` is likely the fix. |
 | crossplane/cli | *new*: `--crossplane-binary` doesn't look bare names up on `PATH` | It's why the labs say `$(which crossplane-core)`. Small, but ask the maintainers first: it changes a flag's meaning. |
 | crossplane-contrib/function-auto-ready | *new*: `go.mod` still says `github.com/crossplane/function-auto-ready` | So `go install github.com/crossplane-contrib/function-auto-ready@latest` fails, and the labs can't run it as a local process. function-patch-and-transform already made this change. |

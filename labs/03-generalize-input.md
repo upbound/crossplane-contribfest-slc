@@ -21,9 +21,11 @@ spec or status, or the pipeline context (for example an EnvironmentConfig).
 ## ✅ Verify Lab 2 Completion
 
 ```shell
-go test ./...                                   # ok
-make -C example render XR=xr-provision.yaml     # 2 managed resources (1 skipped)
+go test ./...
+make -C example render XR=xr-provision.yaml
 ```
+
+Tests pass, and the render's result says `2 managed resources (1 skipped)`.
 
 ---
 
@@ -98,14 +100,35 @@ type Input struct {
 
 ```shell
 go generate ./...
-ls package/input   # lifecycle.fn.crossplane.io_inputs.yaml
+ls package/input
 ```
+
+`package/input` now holds `lifecycle.fn.crossplane.io_inputs.yaml`, the CRD
+for your input.
 
 ## Step 3: Read the input and resolve the mode
 
-Add three imports to `fn.go`: `strings`,
-`github.com/crossplane/crossplane-runtime/v2/pkg/fieldpath`, and
-`github.com/upbound/function-lifecycle/input/v1beta1`, back from Lab 1.
+Replace the imports at the top of `fn.go`. Three are new: `strings`,
+`fieldpath`, and `input/v1beta1`, back from Lab 1. Keep the groups as shown;
+Lab 5's linter checks them.
+
+```go
+import (
+	"context"
+	"strings"
+
+	"github.com/crossplane/crossplane-runtime/v2/pkg/fieldpath"
+
+	"github.com/crossplane/function-sdk-go/errors"
+	"github.com/crossplane/function-sdk-go/logging"
+	fnv1 "github.com/crossplane/function-sdk-go/proto/v1"
+	"github.com/crossplane/function-sdk-go/request"
+	"github.com/crossplane/function-sdk-go/resource"
+	"github.com/crossplane/function-sdk-go/response"
+
+	"github.com/upbound/function-lifecycle/input/v1beta1"
+)
+```
 
 In `RunFunction`, replace the annotation lookup from Lab 2 with:
 
@@ -179,8 +202,9 @@ make -C example render COMPOSITION=composition-environment.yaml \
   CONTEXT='apiextensions.crossplane.io/environment={"managementMode":"Deprovision"}'
 ```
 
-`--context-values` fakes what function-environment-configs would put in the
-context, so you can test the change-freeze story without a cluster.
+`CONTEXT=` passes render's `--context-values` flag. It fakes what
+function-environment-configs would put in the context, so you can test the
+change-freeze story without a cluster.
 
 ---
 
