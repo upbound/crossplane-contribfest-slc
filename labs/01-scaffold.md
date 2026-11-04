@@ -40,15 +40,15 @@ the end of Lab 5 runs in that directory, in both terminals.
 
 `init.sh` renames the Go module to `github.com/crossplane/function-lifecycle`.
 Keep that name: the reference solution uses it too, so the catch-ups fit your
-code. `init.sh` misses two files, so finish those renames:
+code. `init.sh` misses one line in each of two files. Fix them in your editor:
 
-```shell
-perl -pi -e 's#function-template-go#function-lifecycle#g' package/crossplane.yaml
-perl -pi -e 's#github.com/crossplane/function-template-go#github.com/crossplane/function-lifecycle#g' .golangci.yml
-```
+| File | Change | To |
+|---|---|---|
+| `package/crossplane.yaml` | `name: function-template-go` | `name: function-lifecycle` |
+| `.golangci.yml` | `prefix(github.com/crossplane/function-template-go)` | `prefix(github.com/crossplane/function-lifecycle)` |
 
-The first names the package. The second fixes the import grouping that Lab 5's
-linter checks.
+The first names the package. The second tells Lab 5's linter which imports are
+your own, so it groups them correctly.
 
 > 💡 `init.sh` missing `package/crossplane.yaml` and `.golangci.yml` is a real
 > bug in function-template-go. That's a contribution you can make today. See
