@@ -18,6 +18,16 @@ unreachable):
   passes, and `--check` passes three times in a row.
 - golangci-lint finds 17 issues on the Lab 4 code and 0 on Lab 5.
 
+On 2026-11-04, two emulated first-time attendees ran the start slide and Labs
+1–5 in a sandbox laptop (own HOME, cold caches, stock make). They wrote the
+code from the lab pages, without the solution. The first run found 24 issues
+and the second 10; all are fixed. In the second run:
+- Every lab was completed from the instructions alone.
+- Every catch-up kept `main` at the scaffold, and Lab 5's commit worked after one.
+- Nothing downloaded with `GOPROXY=off` after setup.
+
+The `gh` steps of Lab 5 weren't run.
+
 These can't be checked without you:
 
 - Clean machines: Linux, WSL2, Intel Mac, and a laptop that has never built Go.
@@ -200,3 +210,5 @@ recognize the message and know the fix works:
 | Date | Machine | Go | Setup time | ✘ / ! | Lab 1–5 times | Problems found |
 |---|---|---|---|---|---|---|
 | 2026-11-03 | macOS arm64, zsh, no Docker | 1.27.1 | ~1 min, cold | — | scripted | localhost costs 10 s per function; `--crossplane-binary` needs a path; `xpkg init` fails through symlinks; golangci-lint 2.12.0 release binary panics on Go 1.27. All fixed or worked around. |
+| 2026-11-04 | sandbox laptop, run 1 | 1.27.1 | 1:17 cold | PATH ✘ | est. 7–9 / 18–22 / 12–15 / 10–13 / 20–25 min | Catch-up broke Lab 5's PR; Lab 2 outline dropped the `Function` type; working directory unclear between terminals; Lab 5 far over its box; and 20 smaller. Fixed. |
+| 2026-11-04 | sandbox laptop, run 2, offline after setup | 1.27.1 | 1:23 cold | PATH ✘ (no TTY) | est. 6–8 / 12–18 / 12–15 / 8–11 / 12–15 min | Pasted `# comments` break stock macOS zsh; `setup.sh` exited 1 on success; a stopped function makes render hang 60 s. Fixed. |
