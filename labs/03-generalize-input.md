@@ -126,7 +126,7 @@ import (
 	"github.com/crossplane/function-sdk-go/resource"
 	"github.com/crossplane/function-sdk-go/response"
 
-	"github.com/upbound/function-lifecycle/input/v1beta1"
+	"github.com/crossplane/function-lifecycle/input/v1beta1"
 )
 ```
 

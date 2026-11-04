@@ -38,15 +38,17 @@ the end of Lab 5 runs in that directory, in both terminals.
 > **⚠️ Stay out of `/tmp`**: `xpkg init` fails with `path outside base dir`
 > when the path goes through a symlink, and on macOS `/tmp` is one.
 
-`init.sh` renames the module to `github.com/crossplane/function-lifecycle`. We
-are all building the same upstream function today, so point it at the real
-repo and finish the renames `init.sh` doesn't do:
+`init.sh` renames the Go module to `github.com/crossplane/function-lifecycle`.
+Keep that name: the reference solution uses it too, so the catch-ups fit your
+code. `init.sh` misses two files, so finish those renames:
 
 ```shell
-perl -pi -e 's#github.com/crossplane/function-lifecycle#github.com/upbound/function-lifecycle#g' go.mod fn.go
 perl -pi -e 's#function-template-go#function-lifecycle#g' package/crossplane.yaml
-perl -pi -e 's#github.com/crossplane/function-template-go#github.com/upbound/function-lifecycle#g' .golangci.yml
+perl -pi -e 's#github.com/crossplane/function-template-go#github.com/crossplane/function-lifecycle#g' .golangci.yml
 ```
+
+The first names the package. The second fixes the import grouping that Lab 5's
+linter checks.
 
 > 💡 `init.sh` missing `package/crossplane.yaml` and `.golangci.yml` is a real
 > bug in function-template-go. That's a contribution you can make today. See
