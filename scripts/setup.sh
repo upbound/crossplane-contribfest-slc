@@ -165,7 +165,7 @@ else
   fi
 fi
 
-step "Smoke test: render without Docker"
+step "Smoke test: render a composition"
 mkdir -p "$tmp/smoke"
 cat >"$tmp/smoke/xr.yaml" <<'EOF'
 apiVersion: example.crossplane.io/v1
@@ -217,7 +217,7 @@ if [ -x "$pt" ] && [ -x "$core" ] && command -v crossplane >/dev/null; then
   start=$SECONDS
   if (cd "$tmp/smoke" && crossplane composition render xr.yaml composition.yaml functions.yaml \
     --crossplane-binary="$core") >"$tmp/render.out" 2>&1 && grep -q "hello: contribfest" "$tmp/render.out"; then
-    pass "crossplane composition render ran function-patch-and-transform in $((SECONDS - start))s"
+    pass "crossplane composition render, with Crossplane and function-patch-and-transform as local processes, in $((SECONDS - start))s"
   else
     tail -5 "$tmp/render.out"
     fail "render didn't produce the expected ConfigMap"
@@ -263,14 +263,16 @@ if command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then
 else
   warn "gh missing or logged out: you can open your Lab 5 PR in the browser instead"
 fi
-if docker info >/dev/null 2>&1; then
-  pass "docker (Lab 6, and building the package image in Lab 5)"
-else
-  warn "no Docker: fine for Labs 1–5. Lab 6, a take-home, needs it."
-fi
+
+# Lab 6 runs a real cluster. Labs 1-5 never use these.
+step "Only for Lab 6, the take-home cluster lab"
 missing=""
-for t in kind kubectl helm; do command -v $t >/dev/null || missing="$missing $t"; done
-[ -z "$missing" ] && pass "kind, kubectl, helm (Lab 6)" || warn "missing$missing: only Lab 6 needs them"
+for t in docker kind kubectl helm; do command -v $t >/dev/null || missing="$missing $t"; done
+if [ -z "$missing" ]; then
+  pass "docker, kind, kubectl, helm"
+else
+  warn "not installed:$missing. Labs 1–5 don't need them."
+fi
 
 step "Your PATH"
 line="export PATH=\"$BIN_DIR:\$PATH\""
