@@ -31,7 +31,7 @@ start; some are old.
 
 | Repo | Issue | Why it's a good start |
 |---|---|---|
-| crossplane/cli | *new*: render's default Development target `localhost:9443` stalls about 10 s per function on some networks | You saw why Lab 1 uses `127.0.0.1`. The render engine dials through gRPC's `dns` resolver; `127.0.0.1`, `[::1]`, and `passthrough:///localhost:9443` are all instant. Default to `127.0.0.1:9443`, or dial with `passthrough`. |
+| crossplane/cli | *new*: render's default Development target `localhost:9443` stalls about 10 s per function on some networks | You saw why Lab 1 uses `127.0.0.1`. The render engine dials through gRPC's `dns` resolver; `127.0.0.1`, `[::1]`, and `passthrough:///localhost:9443` are all instant. Default to `127.0.0.1:9443`, or dial with `passthrough`. The Docker engine has the same stall, and there 127.0.0.1 doesn't help: render rewrites the target to `host.docker.internal`, which took 10 s per render on colima, against 0.3 s with `passthrough:///`. |
 | crossplane/cli | *new*: render waits a minute, then fails with `signal: killed`, when a Development function isn't listening | Reproduce by rendering with the function stopped. Failing fast with "can't reach function-lifecycle at 127.0.0.1:9443" would save everyone in the room a minute and a guess. |
 | crossplane/cli | *new*: `xpkg init` fails with `path outside base dir` when the target path goes through a symlink | Reproduce with `cd /tmp && crossplane xpkg init f function-template-go -d f -r` on macOS. Resolving the base dir with `filepath.EvalSymlinks` is likely the fix. |
 | crossplane/cli | *new*: `--crossplane-binary` doesn't look bare names up on `PATH` | It's why the labs say `$(which crossplane-core)`. Small, but ask the maintainers first: it changes a flag's meaning. |
@@ -56,9 +56,12 @@ start; some are old.
   `CronOperation`, that annotates XRs with `lifecycle.fn.crossplane.io/mode:
   ObserveOnly` when a freeze starts and `Full` when it ends. function-lifecycle
   then applies the mode to every resource. The package declares
-  `capabilities: [operation]`. Operations are alpha in Crossplane 2.4 (start it
-  with `--enable-operations`), and the 2.5 CLI can't render them, so you need a
-  cluster: Lab 6's kind setup with that flag added.
+  `capabilities: [operation]`. Develop it the way you built function-lifecycle:
+  `crossplane operation render op.yaml functions.yaml
+  --crossplane-binary=$(which crossplane-core)` runs it against your local
+  process, no cluster or Docker needed. Operations are alpha in Crossplane 2.4,
+  so to watch one fire on a schedule you need a cluster started with
+  `--enable-operations`: Lab 6's kind setup with that flag added.
 - **function-template-rust.** The official
   [function-sdk-rust](https://github.com/crossplane/function-sdk-rust) is two
   months old and has no template yet.
