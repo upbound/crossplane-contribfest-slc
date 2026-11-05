@@ -53,18 +53,45 @@ You also get `example/test.sh`, a render test harness. You use it in Step 4.
 
 ## Step 2: Report the source
 
-Make `resolveMode` return where the mode came from as a second value:
-
-| Source | String |
-|---|---|
-| annotation | `"annotation " + AnnotationMode` |
-| modeRef | `"modeRef " + in.ModeRef` |
-| input mode | `"input mode"` |
-| fallback | `"default"` |
-
-Then use it:
+Make `resolveMode` also return where the mode came from. In `fn.go`, replace
+the `resolveMode` you wrote in Lab 3 with:
 
 ```go
+// resolveMode returns the lifecycle mode and where it came from. In order of
+// precedence it comes from the XR's mode annotation, the field ModeRef points
+// to, the input's mode, or defaults to Full.
+func resolveMode(req *fnv1.RunFunctionRequest, xr *resource.Composite, in *v1beta1.Input) (Mode, string, error) {
+	if v, ok := xr.Resource.GetAnnotations()[AnnotationMode]; ok {
+		return Mode(v), "annotation " + AnnotationMode, nil
+	}
+	if in.ModeRef != "" {
+		v, err := lookup(req, xr, in.ModeRef)
+		if err != nil {
+			return "", "", err
+		}
+		if v != "" {
+			return Mode(v), "modeRef " + in.ModeRef, nil
+		}
+	}
+	if in.Mode != "" {
+		return Mode(in.Mode), "input mode", nil
+	}
+	return ModeFull, "default", nil
+}
+```
+
+Now `RunFunction` gets three values back. In `RunFunction`, find the
+`resolveMode` call. Replace it and the `mode.Policies()` check below it, down to
+the line before `desired, err := request.GetDesiredComposedResources(req)`, with:
+
+```go
+	mode, source, err := resolveMode(req, xr, in)
+	if err != nil {
+		response.Fatal(rsp, err)
+		return rsp, nil
+	}
+
+	// Fail closed: a typo in the mode must never fall back to Full.
 	policies, err := mode.Policies()
 	if err != nil {
 		response.Fatal(rsp, errors.Wrapf(err, "invalid mode from %s", source))
@@ -73,13 +100,16 @@ Then use it:
 	f.log.Debug("Resolved lifecycle mode", "mode", mode, "source", source, "policies", policies)
 ```
 
+A bad mode now says where it came from: `invalid mode from annotation
+lifecycle.fn.crossplane.io/mode: unknown mode "Orphan": …`.
+
 ## Step 3: Add a condition
 
 Results become events on the XR. Events are throttled and expire. A condition
 stays on the XR's status, so `kubectl get` and `crossplane resource trace` show
 the active mode.
 
-Add `fmt` to the imports in `fn.go`, and this constant:
+Add `fmt` to the imports in `fn.go`, and this constant below `AnnotationMode`:
 
 ```go
 // ConditionTypeLifecycleMode reports the active mode on the XR.
@@ -95,8 +125,12 @@ Then replace the `response.Normalf` line at the end of `RunFunction`:
 		TargetComposite()
 ```
 
-Add `f.log.Debug("Set management policies", "resource", name, "policies", policies)`
-inside the loop too. You see it when the function runs with `--debug`.
+In the `for` loop, add this line just before `applied++`. You see it when the
+function runs with `--debug`:
+
+```go
+		f.log.Debug("Set management policies", "resource", name, "policies", policies)
+```
 
 ```shell
 go test -v ./...
