@@ -87,7 +87,7 @@ The default target is `localhost:9443`. On some networks, resolving
 
 ```shell
 git init -b main && git add -A && git commit -s -m "chore: scaffold"
-go test ./...
+go test -v ./...
 ```
 
 In **terminal 1**, run the function:

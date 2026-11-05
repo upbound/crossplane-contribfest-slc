@@ -23,7 +23,7 @@
 ## ✅ Verify Lab 1 Completion
 
 ```shell
-go test ./...
+go test -v ./...
 ```
 
 It passes.
@@ -50,7 +50,7 @@ The tests are written for you. Your job is to make them pass.
 cd ~/function-lifecycle
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-02
 git checkout FETCH_HEAD -- fn_test.go example/
-go test ./...
+go test -v ./...
 ```
 
 That's the repo you scaffolded in Lab 1. The checkout copies only `fn_test.go` and
@@ -196,7 +196,7 @@ func isManaged(dr *resource.DesiredComposed) bool {
 ## Step 4: Make it green
 
 ```shell
-go test ./...
+go test -v ./...
 ```
 
 Read the failures: `-want` is the expected response, `+got` is yours.
@@ -229,7 +229,7 @@ reports `Error 1`. That's the behavior you want.
 
 ## ✅ Done when
 
-- `go test ./...` passes
+- `go test -v ./...` passes
 - In the `xr-provision.yaml` render the Bucket and the Object have
   `managementPolicies: [Observe, Create, Update, LateInitialize]`, and the
   ConfigMap has none

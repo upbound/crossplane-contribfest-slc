@@ -23,7 +23,7 @@ pipeline.
 ## ✅ Verify Lab 3 Completion
 
 ```shell
-go test ./...
+go test -v ./...
 make -C example render XR=xr-spec-mode.yaml
 ```
 
@@ -97,7 +97,7 @@ Add `f.log.Debug("Set management policies", "resource", name, "policies", polici
 inside the loop too. You see it when the function runs with `--debug`.
 
 ```shell
-go test ./...
+go test -v ./...
 ```
 
 ## Step 4: Run the render tests

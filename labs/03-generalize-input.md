@@ -21,7 +21,7 @@ spec or status, or the pipeline context (for example an EnvironmentConfig).
 ## ✅ Verify Lab 2 Completion
 
 ```shell
-go test ./...
+go test -v ./...
 make -C example render XR=xr-provision.yaml
 ```
 
@@ -192,7 +192,7 @@ keys need.
 
 ```shell
 go mod tidy
-go test ./...
+go test -v ./...
 ```
 
 ## Step 4: Render from the spec and from the context
@@ -214,8 +214,8 @@ change-freeze story without a cluster.
 
 ## ✅ Done when
 
-- `go test ./...` passes. The new cases include `ModeRefFromContext` and
-  `AnnotationBeatsModeRef`; `go test -v ./...` lists them.
+- `go test -v ./...` passes, and the list includes the new cases
+  `ModeRefFromContext` and `AnnotationBeatsModeRef`
 - `xr-spec-mode.yaml` renders `ObserveOnly`, and the context render shows `Deprovision`
 
 **Bonus:** what should happen when `modeRef` and an EnvironmentConfig disagree?
