@@ -137,7 +137,9 @@ import (
 )
 ```
 
-In `RunFunction`, replace the annotation lookup from Lab 2 with:
+In `RunFunction`, replace your `TODO 1` and `TODO 2` code from Lab 2. That's
+everything between the `GetObservedCompositeResource` check and
+`desired, err := request.GetDesiredComposedResources(req)`. Replace it with:
 
 ```go
 	// The input is optional. Without it we rely on the annotation alone.
@@ -154,20 +156,35 @@ In `RunFunction`, replace the annotation lookup from Lab 2 with:
 		response.Fatal(rsp, err)
 		return rsp, nil
 	}
+
+	// Fail closed: a typo in the mode must never fall back to Full.
+	policies, err := mode.Policies()
+	if err != nil {
+		response.Fatal(rsp, err)
+		return rsp, nil
+	}
 ```
 
-The tests now expect the plain `unknown mode "Orphan": …` message, so return
-`response.Fatal(rsp, err)` when `mode.Policies()` fails.
+The `Policies()` error no longer mentions the annotation, because the mode
+can now come from elsewhere. Lab 4 adds the real source.
 
-Then add the two helpers and fill in the `TODO`s:
+Below `RunFunction`, add the two helpers, then fill in the three `TODO`s in
+`resolveMode`:
 
 ```go
 // resolveMode returns the lifecycle mode. In order of precedence it comes from
 // the XR's mode annotation, the field ModeRef points to, the input's mode, or
 // defaults to Full.
 func resolveMode(req *fnv1.RunFunctionRequest, xr *resource.Composite, in *v1beta1.Input) (Mode, error) {
-	// TODO: annotation, then lookup(in.ModeRef) if it's set and non-empty,
-	// then in.Mode, then ModeFull.
+	// TODO 1: if the XR has the AnnotationMode annotation, return Mode(value), nil.
+	// It's the same lookup you wrote in Lab 2.
+
+	// TODO 2: if in.ModeRef isn't empty, call v, err := lookup(req, xr, in.ModeRef).
+	// If err isn't nil, return "", err. If v isn't empty, return Mode(v), nil.
+
+	// TODO 3: if in.Mode isn't empty, return Mode(in.Mode), nil.
+
+	return ModeFull, nil
 }
 
 // lookup returns the string at the supplied spec., status., or context. path.
@@ -192,6 +209,38 @@ func lookup(req *fnv1.RunFunctionRequest, xr *resource.Composite, ref string) (s
 
 `fieldpath` understands the `[key.with.dots]` bracket syntax that context
 keys need.
+
+If the Go gets in your way, open the solution and paste it over your
+`resolveMode`.
+
+<details>
+<summary>Show solution: the finished <code>resolveMode</code></summary>
+
+```go
+// resolveMode returns the lifecycle mode. In order of precedence it comes from
+// the XR's mode annotation, the field ModeRef points to, the input's mode, or
+// defaults to Full.
+func resolveMode(req *fnv1.RunFunctionRequest, xr *resource.Composite, in *v1beta1.Input) (Mode, error) {
+	if v, ok := xr.Resource.GetAnnotations()[AnnotationMode]; ok {
+		return Mode(v), nil
+	}
+	if in.ModeRef != "" {
+		v, err := lookup(req, xr, in.ModeRef)
+		if err != nil {
+			return "", err
+		}
+		if v != "" {
+			return Mode(v), nil
+		}
+	}
+	if in.Mode != "" {
+		return Mode(in.Mode), nil
+	}
+	return ModeFull, nil
+}
+```
+
+</details>
 
 ```shell
 go mod tidy

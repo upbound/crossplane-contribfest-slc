@@ -6,6 +6,9 @@ fast.
 ## Your job
 
 - Get everyone to a green `✅ Done when` before the mission card on screen moves on.
+- If someone's stuck on Go rather than on Crossplane, point them to **Show
+  solution** under the `TODO` code in Labs 2 and 3. It's the reference code,
+  ready to paste.
 - If someone's more than one lab behind, use the **catch-up** command. Don't
   debug their code while the room moves on. Offer to look at it afterwards.
 - From Lab 5 on, help fast finishers pick a `contribfest` issue and get a PR

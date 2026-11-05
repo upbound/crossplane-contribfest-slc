@@ -134,6 +134,8 @@ func (m Mode) Policies() ([]string, error) {
 
 Replace all of `fn.go` with this file, then fill in the three `TODO`s. It
 drops the template's `input/v1beta1` import for now; Lab 3 brings it back.
+Until you fill them in, the file doesn't compile, and your editor shows errors
+such as `undefined: mode`. That's expected.
 
 ```go
 package main
@@ -174,12 +176,14 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		return rsp, nil
 	}
 
-	// TODO 1: start from ModeFull. If the XR has the AnnotationMode
-	// annotation, use its value. Hint: xr.Resource.GetAnnotations().
+	// TODO 1: set mode. Start with mode := ModeFull. If the XR has the
+	// AnnotationMode annotation, set mode = Mode(value) instead.
+	// xr.Resource.GetAnnotations() returns a map[string]string.
 
-	// TODO 2: get the policies with mode.Policies(). On error, return
-	// response.Fatal(rsp, errors.Wrapf(err, "invalid %s annotation", AnnotationMode)).
-	// Fail closed: a typo must never fall back to Full.
+	// TODO 2: set policies with policies, err := mode.Policies(). If err isn't
+	// nil, fail closed, because a typo must never fall back to Full. Call
+	// response.Fatal(rsp, errors.Wrapf(err, "invalid %s annotation", AnnotationMode))
+	// and return rsp, nil, like the error check above.
 
 	desired, err := request.GetDesiredComposedResources(req)
 	if err != nil {
@@ -189,11 +193,11 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 
 	var applied, skipped int
 	for name, dr := range desired {
-		// TODO 3: if dr isn't a managed resource (see isManaged), log it with
-		// f.log.Debug("Skipping a resource that isn't managed", "resource", name),
-		// count it in skipped, and continue. Otherwise set its policies with
-		// dr.Resource.SetValue("spec.managementPolicies", policies), return a
-		// fatal result if that fails, and count it in applied.
+		// TODO 3: if isManaged(dr) is false, call
+		// f.log.Debug("Skipping composed resource that is not a managed resource", "resource", name),
+		// then skipped++ and continue. Otherwise call
+		// dr.Resource.SetValue("spec.managementPolicies", policies). If that
+		// returns an error, return a fatal result. Then applied++.
 	}
 
 	if err := response.SetDesiredComposedResources(rsp, desired); err != nil {
@@ -213,6 +217,104 @@ func isManaged(dr *resource.DesiredComposed) bool {
 	return err == nil
 }
 ```
+
+Give the `TODO`s a few minutes. If the Go gets in your way, open the solution
+and paste the whole file over `fn.go`.
+
+<details>
+<summary>Show solution: the finished <code>fn.go</code></summary>
+
+```go
+package main
+
+import (
+	"context"
+
+	"github.com/crossplane/function-sdk-go/errors"
+	"github.com/crossplane/function-sdk-go/logging"
+	fnv1 "github.com/crossplane/function-sdk-go/proto/v1"
+	"github.com/crossplane/function-sdk-go/request"
+	"github.com/crossplane/function-sdk-go/resource"
+	"github.com/crossplane/function-sdk-go/response"
+)
+
+// AnnotationMode on the XR selects the lifecycle mode of its composed
+// resources.
+const AnnotationMode = "lifecycle.fn.crossplane.io/mode"
+
+// Function sets spec.managementPolicies on composed managed resources.
+type Function struct {
+	fnv1.UnimplementedFunctionRunnerServiceServer
+
+	log logging.Logger
+}
+
+// RunFunction runs the Function.
+func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) (*fnv1.RunFunctionResponse, error) {
+	f.log.Info("Running function", "tag", req.GetMeta().GetTag())
+
+	// response.To copies the desired state accumulated by previous pipeline
+	// steps into our response. We only change what we need to.
+	rsp := response.To(req, response.DefaultTTL)
+
+	xr, err := request.GetObservedCompositeResource(req)
+	if err != nil {
+		response.Fatal(rsp, errors.Wrap(err, "cannot get observed composite resource"))
+		return rsp, nil
+	}
+
+	mode := ModeFull
+	if v, ok := xr.Resource.GetAnnotations()[AnnotationMode]; ok {
+		mode = Mode(v)
+	}
+
+	// Fail closed: a typo in the mode must never fall back to Full.
+	policies, err := mode.Policies()
+	if err != nil {
+		response.Fatal(rsp, errors.Wrapf(err, "invalid %s annotation", AnnotationMode))
+		return rsp, nil
+	}
+
+	desired, err := request.GetDesiredComposedResources(req)
+	if err != nil {
+		response.Fatal(rsp, errors.Wrap(err, "cannot get desired composed resources"))
+		return rsp, nil
+	}
+
+	var applied, skipped int
+	for name, dr := range desired {
+		if !isManaged(dr) {
+			f.log.Debug("Skipping composed resource that is not a managed resource", "resource", name)
+			skipped++
+			continue
+		}
+		if err := dr.Resource.SetValue("spec.managementPolicies", policies); err != nil {
+			response.Fatal(rsp, errors.Wrapf(err, "cannot set spec.managementPolicies on composed resource %q", name))
+			return rsp, nil
+		}
+		applied++
+	}
+
+	if err := response.SetDesiredComposedResources(rsp, desired); err != nil {
+		response.Fatal(rsp, errors.Wrap(err, "cannot set desired composed resources"))
+		return rsp, nil
+	}
+
+	response.Normalf(rsp, "%s: set managementPolicies %v on %d managed resources (%d skipped)", mode, policies, applied, skipped)
+
+	return rsp, nil
+}
+
+// isManaged returns true if the composed resource looks like a managed
+// resource. Every managed resource has spec.forProvider. Plain Kubernetes
+// objects and nested XRs don't.
+func isManaged(dr *resource.DesiredComposed) bool {
+	_, err := dr.Resource.GetValue("spec.forProvider")
+	return err == nil
+}
+```
+
+</details>
 
 > **⚠️ Don't build a new desired state from scratch.** Earlier steps put
 > resources there. If you drop them, Crossplane deletes them.
