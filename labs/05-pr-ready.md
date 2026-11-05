@@ -15,14 +15,16 @@ read your code, then open a pull request.
 
 ## 📋 Prerequisites
 
-- [ ] Completed Lab 4, and `make serve` stopped
+- [ ] Completed Lab 4
+- [ ] Your function running in terminal 1, and function-patch-and-transform in
+  terminal 3 (Lab 2, Step 1)
 - [ ] A terminal in `~/function-lifecycle`. Every command in this lab runs there.
 - [ ] `gh auth status` shows you're logged in, or use the browser for the PR
 
 ## ✅ Verify Lab 4 Completion
 
 ```shell
-make -C example test
+./example/test.sh
 ```
 
 It prints `PASS` for all seven examples.
@@ -142,10 +144,12 @@ gh repo fork upbound/function-lifecycle --clone && cd function-lifecycle
 git switch -c <issue-number>-short-name
 ```
 
-Write the test first, then the code. Then:
+Write the test first, then the code. If you change `example/`, stop the
+function in terminal 1, run the fork's instead, and run `./example/test.sh`.
+Then:
 
 ```shell
-make -C example test && golangci-lint run ./...
+go test -v ./... && golangci-lint run ./...
 git add -A && git commit -s -m "feat: <what it does>"
 git push -u origin HEAD
 gh pr create --web
@@ -159,12 +163,8 @@ Fill in the PR template. "Fixes #N" links the issue.
 
 You have a PR URL, and its CI is green or running.
 
-When you're done for the day, stop function-patch-and-transform, which
-`make` left running:
-
-```shell
-make -C ~/function-lifecycle/example stop
-```
+When you're done for the day, stop both functions: `Ctrl-C` in terminals 1
+and 3.
 
 ## 🛟 Stuck?
 

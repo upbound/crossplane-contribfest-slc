@@ -15,7 +15,7 @@ evening, **L** needs a design discussion first.
 | 2 | **`respectExisting`.** Don't overwrite `spec.managementPolicies` that an earlier step set on purpose. | S | A test where the bucket arrives with `["Observe"]` and keeps it |
 | 3 | **Propagate to nested XRs.** Copy the mode annotation onto composed XRs, so a whole tree follows one switch. | S | A test where a composed XR gets the annotation and a ConfigMap doesn't |
 | 4 | **`debug: true`.** Write the per-resource decisions into the pipeline context under `lifecycle.fn.crossplane.io/decisions`. | S | A test asserting the context key; a render with `-c` shows it |
-| 5 | **EnvironmentConfig freeze example.** Add an example using function-environment-configs and an EnvironmentConfig with `managementMode: ObserveOnly`. | S | `make -C example test` gets a new PASS line |
+| 5 | **EnvironmentConfig freeze example.** Add an example using function-environment-configs and an EnvironmentConfig with `managementMode: ObserveOnly`. | S | `./example/test.sh` gets a new PASS line |
 | 6 | **Most restrictive wins.** Accept a list of `modeRefs` and pick the most restrictive mode, so a platform freeze beats an XR's own choice. | M | Tests for each pair ordering; README explains the ranking |
 | 7 | **Per-resource rules.** Match composed resources by composition-resource-name glob or by kind, and give them their own mode. For example, never delete `backup-*`. | M | Tests for a glob match, a kind match, and no match |
 | 8 | **Expiry.** `lifecycle.fn.crossplane.io/expires-at` switches to Deprovision after the time. Set the response TTL so Crossplane calls back right at expiry. | M | Tests with an injected clock, before and after expiry, asserting the TTL |

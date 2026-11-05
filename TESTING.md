@@ -10,7 +10,7 @@ Checked on 2026-11-03 on an arm64 Mac (Go 1.27.1, zsh, Docker deliberately
 unreachable):
 
 - Every `workshop/lab-0N` tag builds and passes `go test`, and its renders give
-  the expected output with both the stock macOS `make` 3.81 and GNU make 4.4.
+  the expected output.
 - Labs 1–5 walked through as an attendee would. The lab pages' commands were
   used as written, the reference repo was a local path, and each lab's code was
   taken from its tag.
@@ -62,7 +62,7 @@ word for word.
 
 | Machine | Who | Notes |
 |---|---|---|
-| macOS arm64, stock `make`, zsh, no Docker | | The most common attendee laptop |
+| macOS arm64, zsh, no Docker | | The most common attendee laptop |
 | macOS Intel | | `darwin_amd64` downloads |
 | Linux amd64 (Ubuntu or Fedora), bash | | `sha256sum` path; distro Go may set `GOTOOLCHAIN=local` |
 | Windows 11 + WSL2 Ubuntu | | |
@@ -95,8 +95,8 @@ template, and for `git fetch`.
 
 - [ ] Run Lab 1, Step 1, then turn Wi-Fi off.
 - [ ] Do the rest of Lab 1, and Labs 2–4 using the catch-up tags you fetched
-      beforehand. `go test`, `go generate`, `go mod tidy`, `make render`,
-      `make test`, and `golangci-lint` must all work.
+      beforehand. `go test`, `go generate`, `go mod tidy`, the renders,
+      `./example/test.sh`, and `golangci-lint` must all work.
 - [ ] Note anything that hangs or downloads.
 
 ## 3. Timed attendee walkthrough
@@ -120,17 +120,17 @@ Things to watch:
   - Terminal 1 logs `Running function`.
 - [ ] **Lab 2**:
   - `go test` fails right after the checkout, as the page says.
-  - `make -C example render` prints the command and starts
-    function-patch-and-transform.
+  - They start function-patch-and-transform in terminal 3, and the render
+    calls both functions.
   - `xr-invalid.yaml` fails closed.
 - [ ] **Lab 3**:
   - `go generate` writes `package/input/lifecycle.fn.crossplane.io_inputs.yaml`.
   - `go mod tidy` works.
   - The spec render shows `ObserveOnly`; the context render shows `Deprovision`.
 - [ ] **Lab 4**:
-  - `make -C example test` gives 7 × PASS.
-  - Running it while `go run` is still up gives the "already listening" message.
-  - The hand renders with `-r -x` and `-c` work while `make serve` runs.
+  - `./example/test.sh` gives 7 × PASS after the restart.
+  - With a function stopped, it says which port has nothing listening.
+  - The hand renders with `-r -x` and `-c` work.
 - [ ] **Lab 5**:
   - golangci-lint reports 17 findings, then 0 after the fixes.
   - Path A: `gh repo create` and `gh pr create` work, and CI starts. Note how
@@ -166,7 +166,7 @@ recognize the message and know the fix works:
       error.
 - [ ] `xpkg init` under `/tmp` on macOS: `path outside base dir`.
 - [ ] `~/.local/bin` not on `PATH`.
-- [ ] Port 9443 and 9444 in use; `make -C example stop`.
+- [ ] Port 9443 or 9444 already in use: `bind: address already in use`.
 - [ ] **macOS firewall**: with the firewall on (System Settings → Network →
       Firewall), does `go run . --insecure --debug` trigger the "accept
       incoming connections" prompt? Does `--address=127.0.0.1:9443` avoid it?

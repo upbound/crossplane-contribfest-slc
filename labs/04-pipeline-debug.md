@@ -18,13 +18,16 @@ pipeline.
 ## 📋 Prerequisites
 
 - [ ] Completed Lab 3
-- [ ] Both terminals in `~/function-lifecycle`. Every command in this lab runs there.
+- [ ] Your function running in terminal 1, and function-patch-and-transform in
+  terminal 3 (Lab 2, Step 1)
+- [ ] All terminals in `~/function-lifecycle`. Every command in this lab runs there.
 
 ## ✅ Verify Lab 3 Completion
 
 ```shell
 go test -v ./...
-make -C example render XR=xr-spec-mode.yaml
+crossplane composition render example/xr-spec-mode.yaml example/composition.yaml \
+  example/functions.yaml -r --crossplane-binary=$(which crossplane-core)
 ```
 
 Tests pass, and the render shows `ObserveOnly`.
@@ -42,8 +45,7 @@ git checkout FETCH_HEAD -- fn_test.go example/
 Same repo as in Lab 3. The checkout copies only `fn_test.go` and
 `example/` from the reference, so the code you wrote stays yours.
 
-You also get `example/test.sh`, a render test harness, and new `make` targets
-to drive it. You use them in Step 4.
+You also get `example/test.sh`, a render test harness. You use it in Step 4.
 
 > 💡 In a real pipeline, function-lifecycle goes after every step that
 > composes resources, and before steps that only read them, such as
@@ -102,24 +104,22 @@ go test -v ./...
 
 ## Step 4: Run the render tests
 
-Stop the function in terminal 1 (`Ctrl-C`). The test starts its own. Then:
+Restart the function in terminal 1 (`Ctrl-C`, then
+`go run . --insecure --debug --address=127.0.0.1:9443`) so it runs your new
+code. Then in terminal 2:
 
 ```shell
-make -C example test
+./example/test.sh
 ```
 
-`make test` builds the function, starts it, renders every example, and checks
-the output. It's the same kind of harness function-aws-query uses.
+It renders every example against your two running functions and checks the
+output. Open it: it's a table of examples and the text each render must
+contain, the same kind of harness function-aws-query uses.
 
 ## Step 5 (if you have time): Look inside the pipeline
 
-In terminal 1, run the function with debug logs:
-
-```shell
-make -C example serve
-```
-
-In terminal 2, render by hand with the inspection flags. This one shows the
+Your function runs with `--debug`, so terminal 1 logs each resource it
+changes. In terminal 2, render by hand with the inspection flags. This one shows the
 results from every step, and the XR with its `LifecycleMode` condition:
 
 ```shell
@@ -145,15 +145,13 @@ crossplane composition render example/xr.yaml example/composition-environment.ya
 | `crossplane resource trace` | The live XR tree and its conditions, in a cluster |
 | Pipeline inspector (alpha, Crossplane v2.2+) | Every request and response, in a cluster |
 
-The rendered XR's status always shows the conditions functions set. Stop
-`make serve` in terminal 1 (`Ctrl-C`) when you're done: Lab 5 starts with
-`make test`, which needs the port.
+The rendered XR's status always shows the conditions functions set.
 
 ---
 
 ## ✅ Done when
 
-`make -C example test` prints `PASS` for all seven examples.
+`./example/test.sh` prints `PASS` for all seven examples.
 
 ## 🛟 Stuck?
 

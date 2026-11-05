@@ -16,13 +16,16 @@ spec or status, or the pipeline context (for example an EnvironmentConfig).
 ## 📋 Prerequisites
 
 - [ ] Completed Lab 2
-- [ ] Both terminals in `~/function-lifecycle`. Every command in this lab runs there.
+- [ ] Your function running in terminal 1, and function-patch-and-transform in
+  terminal 3 (Lab 2, Step 1)
+- [ ] All terminals in `~/function-lifecycle`. Every command in this lab runs there.
 
 ## ✅ Verify Lab 2 Completion
 
 ```shell
 go test -v ./...
-make -C example render XR=xr-provision.yaml
+crossplane composition render example/xr-provision.yaml example/composition.yaml \
+  example/functions.yaml -r --crossplane-binary=$(which crossplane-core)
 ```
 
 Tests pass, and the render's result says `2 managed resources (1 skipped)`.
@@ -201,14 +204,21 @@ Restart the function in terminal 1 (`Ctrl-C`, then
 `go run . --insecure --debug --address=127.0.0.1:9443`), then in terminal 2:
 
 ```shell
-make -C example render XR=xr-spec-mode.yaml
-make -C example render COMPOSITION=composition-environment.yaml \
-  CONTEXT='apiextensions.crossplane.io/environment={"managementMode":"Deprovision"}'
+crossplane composition render example/xr-spec-mode.yaml example/composition.yaml \
+  example/functions.yaml -r --crossplane-binary=$(which crossplane-core)
 ```
 
-`CONTEXT=` passes render's `--context-values` flag. It fakes what
-function-environment-configs would put in the context, so you can test the
-change-freeze story without a cluster.
+The second render uses `composition-environment.yaml`, which reads the mode
+from the pipeline context:
+
+```shell
+crossplane composition render example/xr.yaml example/composition-environment.yaml \
+  example/functions.yaml -r --crossplane-binary=$(which crossplane-core) \
+  --context-values='apiextensions.crossplane.io/environment={"managementMode":"Deprovision"}'
+```
+
+`--context-values` fakes what function-environment-configs would put in the
+context, so you can test the change-freeze story without a cluster.
 
 ---
 

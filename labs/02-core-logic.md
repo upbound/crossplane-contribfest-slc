@@ -63,8 +63,15 @@ function-patch-and-transform to compose a Bucket, a provider-kubernetes
 Object, and a plain ConfigMap. Step `lifecycle` is yours.
 
 `example/functions.yaml` runs both functions locally: yours on port 9443,
-function-patch-and-transform on 9444. `make -C example render` starts
-function-patch-and-transform for you.
+function-patch-and-transform on 9444. Open a **third terminal** and start
+function-patch-and-transform, which `setup.sh` installed:
+
+```shell
+cd ~/function-lifecycle
+function-patch-and-transform --insecure --address=127.0.0.1:9444
+```
+
+It prints nothing, and that's fine. Leave it running until the end of Lab 4.
 
 ## Step 2: Map modes to policies
 
@@ -210,20 +217,24 @@ then:
 go run . --insecure --debug --address=127.0.0.1:9443
 ```
 
-Then in terminal 2:
+Then in terminal 2, render the Provision example. Render calls both
+functions: function-patch-and-transform composes, then yours sets the policies.
 
 ```shell
-make -C example render XR=xr-provision.yaml
-make -C example render XR=xr-invalid.yaml
+crossplane composition render example/xr-provision.yaml example/composition.yaml \
+  example/functions.yaml -r --crossplane-binary=$(which crossplane-core)
 ```
 
-`make` prints the render command it runs. The first render starts
-function-patch-and-transform in the background, and it keeps running until
-`make -C example stop`.
+Now render an XR with a mode that doesn't exist:
 
-The second render fails closed. Its mode is `Orphan`, which doesn't exist, so
-the function returns a fatal result, render exits with an error, and `make`
-reports `Error 1`. That's the behavior you want.
+```shell
+crossplane composition render example/xr-invalid.yaml example/composition.yaml \
+  example/functions.yaml -r --crossplane-binary=$(which crossplane-core)
+```
+
+It fails closed: the function returns a fatal result, and render exits with
+`unknown mode "Orphan": must be one of Full, Provision, ObserveOnly,
+Deprovision`. That's the behavior you want.
 
 ---
 
