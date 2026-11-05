@@ -74,6 +74,7 @@ takes longer than this lab, so start from the reference and make it yours.
 These commands also delete two template leftovers, `NOTES.txt` and `init.sh`:
 
 ```shell
+cd ~/function-lifecycle
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-05
 git checkout FETCH_HEAD -- README.md package/crossplane.yaml
 rm NOTES.txt init.sh

@@ -55,9 +55,13 @@ operator's break-glass lever.
 ## Step 1: Get the tests and the examples
 
 ```shell
+cd ~/function-lifecycle
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-03
 git checkout FETCH_HEAD -- fn_test.go example/
 ```
+
+Same repo as in Lab 2. The checkout copies only `fn_test.go` and
+`example/` from the reference, so the code you wrote stays yours.
 
 ## Step 2: Define the input
 

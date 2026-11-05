@@ -34,9 +34,13 @@ Tests pass, and the render shows `ObserveOnly`.
 ## Step 1: Get the tests and the examples
 
 ```shell
+cd ~/function-lifecycle
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-04
 git checkout FETCH_HEAD -- fn_test.go example/
 ```
+
+Same repo as in Lab 3. The checkout copies only `fn_test.go` and
+`example/` from the reference, so the code you wrote stays yours.
 
 You also get `example/test.sh`, a render test harness, and new `make` targets
 to drive it. You use them in Step 4.

@@ -47,10 +47,14 @@ and every managed resource it composes follows.
 The tests are written for you. Your job is to make them pass.
 
 ```shell
+cd ~/function-lifecycle
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-02
 git checkout FETCH_HEAD -- fn_test.go example/
 go test ./...
 ```
+
+That's the repo you scaffolded in Lab 1. The checkout copies only `fn_test.go` and
+`example/` from the reference, so the code you wrote stays yours.
 
 The tests fail. That's expected: they describe code you haven't written yet.
 
