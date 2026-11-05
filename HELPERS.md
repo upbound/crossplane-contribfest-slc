@@ -72,6 +72,7 @@ Lab 6.
 | `unknown field` in input | `request.GetInput` rejects unknown fields | Check the input YAML against `input/v1beta1/input.go`, and rerun `go generate ./...` |
 | `-want rsp, +got rsp` diff | A test failure | Lines with `-` are expected, `+` are actual. Usually a message string or a missing condition. |
 | `crossplane beta trace: unknown command` | CLI v2.5 renamed it | `crossplane resource trace` |
+| The editor shows `exhaustruct_v5` warnings on every struct literal | The editor runs golangci-lint 2.13 or later, which added that linter. CI and `setup.sh` pin 2.12.0. A curated issue. | Ignore them: `golangci-lint run ./...` in the terminal is what counts. Or point the editor at `~/.local/bin/golangci-lint`, or in Neovim with Mason run `:MasonInstall golangci-lint@v2.12.0`. |
 | golangci-lint not installed | Local laptop | `go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.0 run ./...` |
 | CI `push` job fails with 403 on ghcr.io | Default token can't write packages | Repo Settings → Actions → General → Workflow permissions → Read and write. PR checks don't need it. |
 | CI `push` job fails with `DENIED` on the second architecture, on the repo's very first push | ghcr.io creates the package with the first architecture, but the workflow can't write to it yet | Re-run the failed job (`gh run rerun <id> --failed`). It passed on the re-run for upbound/function-lifecycle. PR checks don't run this job. |
