@@ -11,6 +11,9 @@ unreachable):
 
 - Every `workshop/lab-0N` tag builds and passes `go test`, and its renders give
   the expected output.
+- Every `workshop/lab-0N-start` tag (Labs 2–4) differs from `workshop/lab-0N`
+  only in `fn.go`. Each lab page's **Show solution** turns its markers back
+  into the reference code (checked 2026-11-05).
 - Labs 1–5 walked through as an attendee would. The lab pages' commands were
   used as written, the reference repo was a local path, and each lab's code was
   taken from its tag.
@@ -151,8 +154,9 @@ From a directory where the previous lab went wrong (leave a compile error in
       only the scaffold commit.
 - [ ] After the `workshop/lab-05` catch-up, Lab 5 Step 4 commits the whole
       function on `pr-ready`.
-- [ ] Labs 2–4, Step 1 (`git checkout FETCH_HEAD -- fn_test.go example/`) on
-      top of a clean previous tag.
+- [ ] Labs 2–4, Step 1 (`workshop/lab-0N-start`) on top of a clean previous
+      tag: `grep -n 'TODO(lab-0N)' fn.go` finds the markers, and the page's
+      **Show solution** makes `go test ./...` pass.
 
 ## 5. Things that will go wrong in the room
 

@@ -55,55 +55,23 @@ input:
 Precedence: **annotation → modeRef → mode → Full**. The annotation stays the
 operator's break-glass lever.
 
-## Step 1: Get the tests and the examples
+## Step 1: Get the starting code, the tests, and the examples
 
 ```shell
 cd ~/function-lifecycle
-git fetch https://github.com/upbound/function-lifecycle workshop/lab-03
-git checkout FETCH_HEAD -- fn_test.go example/
+git fetch https://github.com/upbound/function-lifecycle workshop/lab-03-start
+git checkout FETCH_HEAD -- fn.go fn_test.go input/ example/
 ```
 
-Same repo as in Lab 2. The checkout copies only `fn_test.go` and
-`example/` from the reference, so the code you wrote stays yours.
+Same repo as in Lab 2. The checkout replaces `fn.go` with the finished Lab 2
+code plus this lab's outline, and `input/` with the new input type. It also
+brings the new tests and examples. Your commits stay as they are.
 
-## Step 2: Define the input
+## Step 2: Generate the input CRD
 
-Replace `input/v1beta1/input.go`:
-
-```go
-// Package v1beta1 contains the input type for this Function
-// +kubebuilder:object:generate=true
-// +groupName=lifecycle.fn.crossplane.io
-// +versionName=v1beta1
-package v1beta1
-
-import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-// Input configures how function-lifecycle picks the lifecycle mode. The XR's
-// lifecycle.fn.crossplane.io/mode annotation always takes precedence.
-// +kubebuilder:object:root=true
-// +kubebuilder:storageversion
-// +kubebuilder:resource:categories=crossplane
-type Input struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	// Mode applies when there is no mode annotation and ModeRef doesn't
-	// resolve to a value. Defaults to Full.
-	// +kubebuilder:validation:Enum=Full;Provision;ObserveOnly;Deprovision
-	// +optional
-	Mode string `json:"mode,omitempty"`
-
-	// ModeRef reads the mode from a field of the XR or the pipeline context.
-	// It must start with spec., status., or context. Use brackets for keys
-	// that contain dots, for example
-	// context.[apiextensions.crossplane.io/environment].managementMode.
-	// +optional
-	ModeRef string `json:"modeRef,omitempty"`
-}
-```
+Open `input/v1beta1/input.go`. The `Input` has the two fields from the idea
+above, `mode` and `modeRef`. The `+kubebuilder` comments become the CRD's
+schema, so `mode` accepts only the four modes. Generate the CRD:
 
 ```shell
 go generate ./...
@@ -113,102 +81,32 @@ ls package/input
 `package/input` now holds `lifecycle.fn.crossplane.io_inputs.yaml`, the CRD
 for your input.
 
-## Step 3: Read the input and resolve the mode
+## Step 3: Fill in `resolveMode`
 
-Replace the imports at the top of `fn.go`. Three are new: `strings`,
-`fieldpath`, and `input/v1beta1`, back from Lab 1. Keep the groups as shown;
-Lab 5's linter checks them.
+Open `fn.go`. Here's what's new since Lab 2:
 
-```go
-import (
-	"context"
-	"strings"
+- `RunFunction` reads the optional input, then calls `resolveMode` instead of
+  reading the annotation itself.
+- `lookup` reads the string at a `spec.`, `status.`, or `context.` path.
+  `fieldpath` understands the `[key.with.dots]` bracket syntax that context
+  keys need.
+- The `Policies()` error no longer mentions the annotation, because the mode
+  can now come from elsewhere. Lab 4 adds the real source.
 
-	"github.com/crossplane/crossplane-runtime/v2/pkg/fieldpath"
+`resolveMode` is yours. Its three markers follow the order of precedence. This
+lists them with their line numbers:
 
-	"github.com/crossplane/function-sdk-go/errors"
-	"github.com/crossplane/function-sdk-go/logging"
-	fnv1 "github.com/crossplane/function-sdk-go/proto/v1"
-	"github.com/crossplane/function-sdk-go/request"
-	"github.com/crossplane/function-sdk-go/resource"
-	"github.com/crossplane/function-sdk-go/response"
-
-	"github.com/crossplane/function-lifecycle/input/v1beta1"
-)
+```shell
+grep -n 'TODO(lab-03)' fn.go
 ```
 
-In `RunFunction`, replace your `TODO 1` and `TODO 2` code from Lab 2. That's
-everything between the `GetObservedCompositeResource` check and
-`desired, err := request.GetDesiredComposedResources(req)`. Replace it with:
+| Marker | Your code |
+|---|---|
+| `TODO(lab-03) 1` | The annotation wins |
+| `TODO(lab-03) 2` | Then the value at `modeRef` |
+| `TODO(lab-03) 3` | Then the input's `mode` |
 
-```go
-	// The input is optional. Without it we rely on the annotation alone.
-	in := &v1beta1.Input{}
-	if req.GetInput() != nil {
-		if err := request.GetInput(req, in); err != nil {
-			response.Fatal(rsp, errors.Wrapf(err, "cannot get Function input from %T", req))
-			return rsp, nil
-		}
-	}
-
-	mode, err := resolveMode(req, xr, in)
-	if err != nil {
-		response.Fatal(rsp, err)
-		return rsp, nil
-	}
-
-	// Fail closed: a typo in the mode must never fall back to Full.
-	policies, err := mode.Policies()
-	if err != nil {
-		response.Fatal(rsp, err)
-		return rsp, nil
-	}
-```
-
-The `Policies()` error no longer mentions the annotation, because the mode
-can now come from elsewhere. Lab 4 adds the real source.
-
-Below `RunFunction`, add the two helpers, then fill in the three `TODO`s in
-`resolveMode`:
-
-```go
-// resolveMode returns the lifecycle mode. In order of precedence it comes from
-// the XR's mode annotation, the field ModeRef points to, the input's mode, or
-// defaults to Full.
-func resolveMode(req *fnv1.RunFunctionRequest, xr *resource.Composite, in *v1beta1.Input) (Mode, error) {
-	// TODO 1: if the XR has the AnnotationMode annotation, return Mode(value), nil.
-	// It's the same lookup you wrote in Lab 2.
-
-	// TODO 2: if in.ModeRef isn't empty, call v, err := lookup(req, xr, in.ModeRef).
-	// If err isn't nil, return "", err. If v isn't empty, return Mode(v), nil.
-
-	// TODO 3: if in.Mode isn't empty, return Mode(in.Mode), nil.
-
-	return ModeFull, nil
-}
-
-// lookup returns the string at the supplied spec., status., or context. path.
-// It returns an empty string if nothing is set at the path.
-func lookup(req *fnv1.RunFunctionRequest, xr *resource.Composite, ref string) (string, error) {
-	var v string
-	var err error
-	switch {
-	case strings.HasPrefix(ref, "spec."), strings.HasPrefix(ref, "status."):
-		v, err = xr.Resource.GetString(ref)
-	case strings.HasPrefix(ref, "context."):
-		v, err = fieldpath.Pave(req.GetContext().AsMap()).GetString(strings.TrimPrefix(ref, "context."))
-	default:
-		return "", errors.Errorf("modeRef %q must start with spec., status., or context.", ref)
-	}
-	if fieldpath.IsNotFound(err) {
-		return "", nil
-	}
-	return v, errors.Wrapf(err, "cannot resolve modeRef %q", ref)
-}
-```
-
-`fieldpath` understands the `[key.with.dots]` bracket syntax that context
-keys need.
+If none of them applies, `resolveMode` already returns `Full`.
 
 If the Go gets in your way, open the solution and paste it over your
 `resolveMode`.

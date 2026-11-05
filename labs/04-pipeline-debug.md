@@ -34,27 +34,57 @@ Tests pass, and the render shows `ObserveOnly`.
 
 ---
 
-## Step 1: Get the tests and the examples
+## Step 1: Get the starting code, the tests, and the examples
 
 ```shell
 cd ~/function-lifecycle
-git fetch https://github.com/upbound/function-lifecycle workshop/lab-04
-git checkout FETCH_HEAD -- fn_test.go example/
+git fetch https://github.com/upbound/function-lifecycle workshop/lab-04-start
+git checkout FETCH_HEAD -- fn.go fn_test.go example/
 ```
 
-Same repo as in Lab 3. The checkout copies only `fn_test.go` and
-`example/` from the reference, so the code you wrote stays yours.
-
-You also get `example/test.sh`, a render test harness. You use it in Step 4.
+Same repo as in Lab 3. The checkout replaces `fn.go` with the finished Lab 3
+code plus this lab's outline. It also brings the new tests and examples,
+including `example/test.sh`, a render test harness you use in Step 4. Your
+commits stay as they are.
 
 > 💡 In a real pipeline, function-lifecycle goes after every step that
 > composes resources, and before steps that only read them, such as
 > function-auto-ready.
 
+Two markers show where your code goes. This lists them with their line
+numbers:
+
+```shell
+grep -n 'TODO(lab-04)' fn.go
+```
+
 ## Step 2: Report the source
 
-Make `resolveMode` also return where the mode came from. In `fn.go`, replace
-the `resolveMode` you wrote in Lab 3 with:
+`resolveMode` now returns a second value: where the mode came from.
+`RunFunction` already uses it. The fatal error says `invalid mode from …`, the
+result says `Provision (from …)`, and with `--debug` the function logs it. So
+far every return passes `""`. Fill in the real sources at `TODO(lab-04) 1`:
+
+| The mode came from | Source |
+|---|---|
+| The annotation | `"annotation " + AnnotationMode` |
+| `modeRef` | `"modeRef " + in.ModeRef` |
+| The input's `mode` | `"input mode"` |
+| Nowhere | `"default"` |
+
+## Step 3: Add a condition
+
+Results become events on the XR. Events are throttled and expire. A condition
+stays on the XR's status, so `kubectl get` and `crossplane resource trace` show
+the active mode. Set one at `TODO(lab-04) 2`, at the end of `RunFunction`. The
+`ConditionTypeLifecycleMode` constant is already there.
+
+Give the `TODO`s a few minutes. If the Go gets in your way, open the solution.
+
+<details>
+<summary>Show solution: the finished <code>resolveMode</code> and the condition</summary>
+
+Paste this over your `resolveMode`:
 
 ```go
 // resolveMode returns the lifecycle mode and where it came from. In order of
@@ -80,57 +110,16 @@ func resolveMode(req *fnv1.RunFunctionRequest, xr *resource.Composite, in *v1bet
 }
 ```
 
-Now `RunFunction` gets three values back. In `RunFunction`, find the
-`resolveMode` call. Replace it and the `mode.Policies()` check below it, down to
-the line before `desired, err := request.GetDesiredComposedResources(req)`, with:
+Add `"fmt"` to the imports, and this after `response.Normalf` at the end of
+`RunFunction`:
 
 ```go
-	mode, source, err := resolveMode(req, xr, in)
-	if err != nil {
-		response.Fatal(rsp, err)
-		return rsp, nil
-	}
-
-	// Fail closed: a typo in the mode must never fall back to Full.
-	policies, err := mode.Policies()
-	if err != nil {
-		response.Fatal(rsp, errors.Wrapf(err, "invalid mode from %s", source))
-		return rsp, nil
-	}
-	f.log.Debug("Resolved lifecycle mode", "mode", mode, "source", source, "policies", policies)
-```
-
-A bad mode now says where it came from: `invalid mode from annotation
-lifecycle.fn.crossplane.io/mode: unknown mode "Orphan": …`.
-
-## Step 3: Add a condition
-
-Results become events on the XR. Events are throttled and expire. A condition
-stays on the XR's status, so `kubectl get` and `crossplane resource trace` show
-the active mode.
-
-Add `fmt` to the imports in `fn.go`, and this constant below `AnnotationMode`:
-
-```go
-// ConditionTypeLifecycleMode reports the active mode on the XR.
-const ConditionTypeLifecycleMode = "LifecycleMode"
-```
-
-Then replace the `response.Normalf` line at the end of `RunFunction`:
-
-```go
-	response.Normalf(rsp, "%s (from %s): set managementPolicies %v on %d managed resources (%d skipped)", mode, source, policies, applied, skipped)
 	response.ConditionTrue(rsp, ConditionTypeLifecycleMode, string(mode)).
 		WithMessage(fmt.Sprintf("Composed managed resources use managementPolicies %v (mode from %s)", policies, source)).
 		TargetComposite()
 ```
 
-In the `for` loop, add this line just before `applied++`. You see it when the
-function runs with `--debug`:
-
-```go
-		f.log.Debug("Set management policies", "resource", name, "policies", policies)
-```
+</details>
 
 ```shell
 go test -v ./...

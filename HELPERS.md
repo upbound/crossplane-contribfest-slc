@@ -7,8 +7,7 @@ fast.
 
 - Get everyone to a green `✅ Done when` before the mission card on screen moves on.
 - If someone's stuck on Go rather than on Crossplane, point them to **Show
-  solution** under the `TODO` code in Labs 2 and 3. It's the reference code,
-  ready to paste.
+  solution** in Labs 2–4. It's the reference code, ready to paste.
 - If someone's more than one lab behind, use the **catch-up** command. Don't
   debug their code while the room moves on. Offer to look at it afterwards.
 - From Lab 5 on, help fast finishers pick a `contribfest` issue and get a PR
@@ -23,6 +22,11 @@ In `~/function-lifecycle`:
 ```shell
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-0N && git read-tree -u --reset FETCH_HEAD
 ```
+
+Step 1 of Labs 2–4 fetches `workshop/lab-0N-start` instead: the finished
+previous lab, with `TODO(lab-0N)` markers in `fn.go`. It replaces only the files
+it lists, so it's not a catch-up. If someone's earlier code is broken, catch up
+first, then do Step 1.
 
 `read-tree` replaces the files and keeps the branch where it is. Don't use
 `git reset --hard` here. It would move `main` to the tag, and Lab 5's PR would
@@ -58,7 +62,7 @@ Lab 6.
 | `crossplane-core isn't on your PATH`, or `command not found: crossplane` after setup | `~/.local/bin` isn't on `PATH` | Add `export PATH="$HOME/.local/bin:$PATH"` to `~/.zshrc` or `~/.bashrc`, then open a new terminal |
 | `xpkg init` fails with `failed to read from stdin: EOF` | The `init.sh` prompt | Add `-r` |
 | `xpkg init` fails with `path outside base dir` | The path goes through a symlink, such as `/tmp` on macOS | Run it under `~` |
-| `go test` fails right after `git checkout FETCH_HEAD -- fn_test.go` | Expected: the tests are ahead of the code | That's the lab. The `-want`/`+got` diff shows what's missing. |
+| `go test` fails right after Step 1's checkout, in Lab 2 with compile errors such as `undefined: mode` | Expected: the tests are ahead of the code, and the `TODO`s are empty | That's the lab. `grep -n 'TODO(lab-0N)' fn.go` lists what's left, and the `-want`/`+got` diff shows what's missing. |
 | render: `--crossplane-binary: stat …/crossplane-core: no such file or directory` | The flag takes a path, not a command name | `--crossplane-binary=$(which crossplane-core)` |
 | render: `Cannot connect to the Docker daemon` | `--crossplane-binary` is missing, so render fell back to Docker. render reads `DOCKER_HOST` or `/var/run/docker.sock` and ignores `docker context`. | Add `--crossplane-binary=$(which crossplane-core)`. To use a container on purpose with Colima: `export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock`. With Podman: `export DOCKER_HOST=unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')` |
 | render takes 10+ seconds | `functions.yaml` targets `localhost`, which resolves slowly on some networks. Without `--crossplane-binary`, render rewrites every target to `host.docker.internal`, which has the same delay. | Set `render.crossplane.io/runtime-development-target: 127.0.0.1:9443` (Lab 1, Step 3), and keep `--crossplane-binary` |

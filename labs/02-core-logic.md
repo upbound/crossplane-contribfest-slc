@@ -42,21 +42,19 @@ It passes.
 An operator annotates the XR with `lifecycle.fn.crossplane.io/mode: Provision`,
 and every managed resource it composes follows.
 
-## Step 1: Get the tests and the examples
+## Step 1: Get the starting code, the tests, and the examples
 
 The tests are written for you. Your job is to make them pass.
 
 ```shell
 cd ~/function-lifecycle
-git fetch https://github.com/upbound/function-lifecycle workshop/lab-02
-git checkout FETCH_HEAD -- fn_test.go example/
-go test -v ./...
+git fetch https://github.com/upbound/function-lifecycle workshop/lab-02-start
+git checkout FETCH_HEAD -- fn.go mode.go fn_test.go example/
 ```
 
-That's the repo you scaffolded in Lab 1. The checkout copies only `fn_test.go` and
-`example/` from the reference, so the code you wrote stays yours.
-
-The tests fail. That's expected: they describe code you haven't written yet.
+That's the repo you scaffolded in Lab 1. The checkout replaces `fn.go` with
+this lab's outline, and adds `mode.go`, the tests, and the examples. Your
+commits stay as they are.
 
 Have a look at `example/composition.yaml`. Step `compose` uses
 function-patch-and-transform to compose a Bucket, a provider-kubernetes
@@ -90,133 +88,31 @@ terminal's `PATH`: see the first row of
 > lsof -t -iTCP:9444 -sTCP:LISTEN | xargs kill
 > ```
 
-## Step 2: Map modes to policies
+## Step 2: Read `mode.go`
 
-Create `mode.go`:
+`mode.go` maps each mode to its policies, as in the table above. `Policies()`
+returns an error for a mode it doesn't know, so a typo can't fall back to
+`Full`. You call it in the next step.
 
-```go
-package main
+## Step 3: Fill in the `TODO`s
 
-import (
-	"github.com/crossplane/function-sdk-go/errors"
-)
+Open `fn.go`. `RunFunction` already gets the observed XR and the desired
+composed resources. Three markers show where your code goes. This lists them
+with their line numbers:
 
-// Mode is a lifecycle mode. Each mode maps to a set of management policies
-// that crossplane-runtime supports.
-type Mode string
-
-// Supported lifecycle modes.
-const (
-	ModeFull        Mode = "Full"
-	ModeProvision   Mode = "Provision"
-	ModeObserveOnly Mode = "ObserveOnly"
-	ModeDeprovision Mode = "Deprovision"
-)
-
-var policies = map[Mode][]string{
-	ModeFull:        {"*"},
-	ModeProvision:   {"Observe", "Create", "Update", "LateInitialize"},
-	ModeObserveOnly: {"Observe"},
-	ModeDeprovision: {"Observe", "Create", "Delete"},
-}
-
-// Policies returns the management policies for the mode.
-func (m Mode) Policies() ([]string, error) {
-	p, ok := policies[m]
-	if !ok {
-		return nil, errors.Errorf("unknown mode %q: must be one of Full, Provision, ObserveOnly, Deprovision", m)
-	}
-	return p, nil
-}
+```shell
+grep -n 'TODO(lab-02)' fn.go
 ```
 
-## Step 3: Write `RunFunction`
+| Marker | Your code |
+|---|---|
+| `TODO(lab-02) 1` | Read the mode from the XR's annotation |
+| `TODO(lab-02) 2` | Fail closed on an unknown mode |
+| `TODO(lab-02) 3` | Set the policies on each managed resource, and skip the rest |
 
-Replace all of `fn.go` with this file, then fill in the three `TODO`s. It
-drops the template's `input/v1beta1` import for now; Lab 3 brings it back.
-Until you fill them in, the file doesn't compile, and your editor shows errors
-such as `undefined: mode`. That's expected.
-
-```go
-package main
-
-import (
-	"context"
-
-	"github.com/crossplane/function-sdk-go/errors"
-	"github.com/crossplane/function-sdk-go/logging"
-	fnv1 "github.com/crossplane/function-sdk-go/proto/v1"
-	"github.com/crossplane/function-sdk-go/request"
-	"github.com/crossplane/function-sdk-go/resource"
-	"github.com/crossplane/function-sdk-go/response"
-)
-
-// AnnotationMode on the XR selects the lifecycle mode of its composed
-// resources.
-const AnnotationMode = "lifecycle.fn.crossplane.io/mode"
-
-// Function sets spec.managementPolicies on composed managed resources.
-type Function struct {
-	fnv1.UnimplementedFunctionRunnerServiceServer
-
-	log logging.Logger
-}
-
-// RunFunction runs the Function.
-func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) (*fnv1.RunFunctionResponse, error) {
-	f.log.Info("Running function", "tag", req.GetMeta().GetTag())
-
-	// response.To copies the desired state accumulated by previous pipeline
-	// steps into our response. We only change what we need to.
-	rsp := response.To(req, response.DefaultTTL)
-
-	xr, err := request.GetObservedCompositeResource(req)
-	if err != nil {
-		response.Fatal(rsp, errors.Wrap(err, "cannot get observed composite resource"))
-		return rsp, nil
-	}
-
-	// TODO 1: set mode. Start with mode := ModeFull. If the XR has the
-	// AnnotationMode annotation, set mode = Mode(value) instead.
-	// xr.Resource.GetAnnotations() returns a map[string]string.
-
-	// TODO 2: set policies with policies, err := mode.Policies(). If err isn't
-	// nil, fail closed, because a typo must never fall back to Full. Call
-	// response.Fatal(rsp, errors.Wrapf(err, "invalid %s annotation", AnnotationMode))
-	// and return rsp, nil, like the error check above.
-
-	desired, err := request.GetDesiredComposedResources(req)
-	if err != nil {
-		response.Fatal(rsp, errors.Wrap(err, "cannot get desired composed resources"))
-		return rsp, nil
-	}
-
-	var applied, skipped int
-	for name, dr := range desired {
-		// TODO 3: if isManaged(dr) is false, call
-		// f.log.Debug("Skipping composed resource that is not a managed resource", "resource", name),
-		// then skipped++ and continue. Otherwise call
-		// dr.Resource.SetValue("spec.managementPolicies", policies). If that
-		// returns an error, return a fatal result. Then applied++.
-	}
-
-	if err := response.SetDesiredComposedResources(rsp, desired); err != nil {
-		response.Fatal(rsp, errors.Wrap(err, "cannot set desired composed resources"))
-		return rsp, nil
-	}
-
-	response.Normalf(rsp, "%s: set managementPolicies %v on %d managed resources (%d skipped)", mode, policies, applied, skipped)
-	return rsp, nil
-}
-
-// isManaged returns true if the composed resource looks like a managed
-// resource. Every managed resource has spec.forProvider. Plain Kubernetes
-// objects and nested XRs don't.
-func isManaged(dr *resource.DesiredComposed) bool {
-	_, err := dr.Resource.GetValue("spec.forProvider")
-	return err == nil
-}
-```
+Each marker says what to write. Until you fill in all three, `fn.go` doesn't
+compile, and your editor shows errors such as `undefined: mode`. That's
+expected.
 
 Give the `TODO`s a few minutes. If the Go gets in your way, open the solution
 and paste the whole file over `fn.go`.
