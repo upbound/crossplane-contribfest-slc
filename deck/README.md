@@ -14,10 +14,10 @@ slide has speaker notes.
 | 0:15 | lab1 | Lab 1, 8 min |
 | 0:23 | lab2 | Lab 2, 15 min |
 | 0:38 | lab3 | Lab 3, 10 min |
-| 0:48 | lab4, debug-toolkit | Lab 4, 8 min. Elastic: if the room is behind, demo it on the projector instead. |
-| 0:56 | pr-checklist, ai-policy, lab5 | What maintainers check in a PR, the AI policy, then Lab 5, 12 min: the Operation, then draft PRs |
+| 0:48 | lab4 | Lab 4, 8 min. Elastic: if the room is behind, demo it on the projector instead. |
+| 0:56 | lab5 | Lab 5, 12 min: the Operation, then draft PRs |
 | 1:08 | lab6 | Lab 6, 8 min: `./e2e/run.sh` on the cluster `setup.sh --e2e` made, the dropped-capability failure, then `gh pr ready`. Elastic: if the room is behind, run it on the projector from your warm cluster, and people finish at home. |
-| 1:16 | polyglot … thanks | The journey to maintainer, curated issues, feedback, group photo. 4 min. |
+| 1:16 | pr-checklist … thanks | 4 min: what maintainers check, the AI policy, then the journey to maintainer, curated issues, feedback, group photo. Skim debug-toolkit and polyglot: the lab pages have both. |
 
 ## Before Nov 11
 
