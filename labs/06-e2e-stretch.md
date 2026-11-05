@@ -17,8 +17,7 @@ tick the e2e box in your draft PR and mark it ready for review.
 ## 📋 Prerequisites
 
 - [ ] Completed Lab 5, with a draft PR
-- [ ] Docker (Docker Desktop or Colima), kind, kubectl, and helm. `setup.sh`
-  doesn't install these.
+- [ ] Docker, kind, kubectl, and helm. `setup.sh` doesn't install these.
 - [ ] About 4 GB of free memory for Docker
 
 ## Why e2e
@@ -155,13 +154,10 @@ docker rm -f lifecycle-e2e-registry
 ## 🛟 Stuck?
 
 `kind create cluster` fails with `could not find a log line that matches
-"Reached target .*Multi-User System.*"`: too many kind clusters are running for
-Docker's inotify limit. Stop the ones you don't need, or raise the limit. On
-Colima:
-
-```shell
-colima ssh -- sudo sysctl -w fs.inotify.max_user_instances=512
-```
+"Reached target .*Multi-User System.*"`: usually other kind clusters use up
+Docker's inotify limit. Delete the ones you don't need with
+`kind delete cluster --name <name>`, or raise the limit as kind's
+[known issues](https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files) page shows.
 
 More in [HELPERS](../HELPERS.md#common-problems).
 

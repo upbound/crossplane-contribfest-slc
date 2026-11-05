@@ -236,8 +236,8 @@ crossplane xpkg build -f package --embed-runtime-image=runtime
 ```
 
 > **⚠️** If `docker build` fails on `RUN --mount` or an empty
-> `BUILDPLATFORM`, your Docker has no BuildKit. Colima without `buildx` is
-> one example. Skip the step and let CI build it.
+> `BUILDPLATFORM`, your Docker has no BuildKit (the `buildx` plugin). Skip
+> the step and let CI build it.
 
 ## Step 7: Commit and open a PR
 
