@@ -55,9 +55,10 @@ kind, kubectl, and helm installed, run:
 ./scripts/setup.sh --e2e
 ```
 
-It does everything step 2 does, then runs the reference function's e2e test
-once. That pulls about 1.5 GB of images and leaves a kind cluster called
-`lifecycle-e2e` running, ready for Lab 6. It takes about 5 minutes, and points
+It does everything step 2 does, then creates a kind cluster called
+`lifecycle-e2e` with the reference function's `e2e/cluster.sh`, and runs its
+e2e test once. That pulls about 1.5 GB of images and leaves the cluster
+running, ready for Lab 6. It takes about 5 minutes, and points
 `kubectl` at the new cluster.
 
 No Docker? That's fine. Pair up for Lab 6, or follow it on the projector.

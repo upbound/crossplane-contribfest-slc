@@ -85,6 +85,8 @@ Lab 6.
 | Lab 5: the Operation render says `on 0 resources` | `-e example/apps.yaml` is missing, so the Operation's requirement matched nothing | Add `-e example/apps.yaml`. It stands in for the Apps in a cluster. |
 | Lab 5 `docker build` fails on `RUN --mount` or `BUILDPLATFORM` | Docker without BuildKit (the `buildx` plugin) | Skip it. CI builds the package. |
 | Lab 6: `kind create cluster` fails with `could not find a log line that matches "Reached target .*Multi-User System.*"` | Other kind clusters use up Docker's inotify limit | Delete clusters you don't need with `kind delete cluster --name <name>`, or raise the limit as kind's [known issues](https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files) page shows |
+| Lab 6: `There's no lifecycle-e2e cluster. Run ./e2e/cluster.sh first.` | The warm-up didn't run, or the cluster was deleted | `./e2e/cluster.sh` creates it. It pulls about 1.5 GB, so pair them up meanwhile |
+| Lab 6: `kubectl get` shows another cluster's resources, or none | `kubectl` points at a different cluster | `kind export kubeconfig --name lifecycle-e2e` |
 | Lab 6: `Crossplane didn't install your build within 5 minutes` | The package didn't install. Often `package/crossplane.yaml` doesn't parse | `kubectl describe functions.pkg.crossplane.io function-lifecycle` and `kubectl get functionrevisions` show why |
 | `unknown field` in input | `request.GetInput` rejects unknown fields | Check the input YAML against `input/v1beta1/input.go`, and rerun `go generate ./...` |
 | `-want rsp, +got rsp` diff | A test failure | Lines with `-` are expected, `+` are actual. Usually a message string or a missing condition. |

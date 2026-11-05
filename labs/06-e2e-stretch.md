@@ -11,9 +11,9 @@ session
 ## 🎯 Learning Objectives
 
 - Know what an e2e test catches that unit tests and render can't
-- Build your function from your working tree and test it on a local kind
-  cluster
-- Keep a PR as a draft until it's proven, then mark it ready
+- Install a function you built on a real control plane: image, package,
+  registry, `Function`
+- Turn that into a test anyone can rerun, and mark the PR ready
 
 ## 📋 Prerequisites
 
@@ -52,26 +52,95 @@ git fetch https://github.com/upbound/function-lifecycle workshop/lab-06
 git checkout FETCH_HEAD -- e2e/
 ```
 
-Open `e2e/run.sh`. The first half sets up a kind cluster. The second half runs
-two scenarios and prints `PASS` or `FAIL` for each check. `e2e/manifests/`
-holds the App XRD, a Composition that wraps a ConfigMap in a provider-kubernetes
-`Object`, three Apps, and the freeze Operation.
+`e2e/` holds `cluster.sh`, which creates the control plane, `run.sh`, the test
+itself, a two-line `Dockerfile`, and `manifests/`: the App XRD, a Composition
+that wraps a ConfigMap in a provider-kubernetes `Object`, the functions, three
+Apps, and the freeze Operation.
 
-## Step 2: Run it
+## Step 2: Check the control plane
+
+`./scripts/setup.sh --e2e` created it before the session by running
+`./e2e/cluster.sh`. These are the commands it ran:
+
+```shell
+kind create cluster --name lifecycle-e2e
+docker run -d --name lifecycle-e2e-registry --network kind -p 127.0.0.1:5001:5000 registry:2
+helm repo add crossplane-stable https://charts.crossplane.io/stable
+helm install crossplane crossplane-stable/crossplane --version 2.4.3 \
+  --namespace crossplane-system --create-namespace --set 'args={--enable-operations}'
+kubectl apply -f e2e/manifests/provider.yaml -f e2e/manifests/functions.yaml
+kubectl apply -f e2e/manifests/definition.yaml
+kubectl apply -f e2e/manifests/composition.yaml -f e2e/manifests/providerconfig.yaml
+```
+
+- The registry runs next to the cluster, on kind's Docker network. Your
+  function's package goes there in Step 3.
+- `--enable-operations` turns on Operations, which are still alpha.
+- `provider.yaml` gives provider-kubernetes permission to manage ConfigMaps in
+  the cluster. `functions.yaml` installs function-patch-and-transform and
+  function-auto-ready. Your function comes next.
+
+Point `kubectl` at the cluster, and check it:
+
+```shell
+kind export kubeconfig --name lifecycle-e2e
+kubectl get providers.pkg.crossplane.io,functions.pkg.crossplane.io
+kubectl get xrd
+```
+
+The provider and the two functions are `HEALTHY`, and the
+`apps.example.crossplane.io` XRD is `ESTABLISHED`. No cluster? Run
+`./e2e/cluster.sh`. It pulls about 1.5 GB of images, so it takes about 5
+minutes.
+
+## Step 3: Install your function
+
+Crossplane installs a function from a package in a registry, and runs it as a
+pod. Do it once by hand.
+
+Build a Linux binary for kind's node, put it in an image with
+`e2e/Dockerfile`, and load the image straight into kind:
+
+```shell
+TAG=dev-$(date +%s)
+BUILD=$(mktemp -d)
+CGO_ENABLED=0 GOOS=linux GOARCH=$(docker version --format '{{.Server.Arch}}') go build -o $BUILD/function .
+cp e2e/Dockerfile $BUILD/
+docker build -t function-lifecycle:$TAG $BUILD
+kind load docker-image function-lifecycle:$TAG --name lifecycle-e2e
+```
+
+Build the package and push it to the local registry. The package holds
+`package/crossplane.yaml` and the input CRD: what Crossplane reads to install
+the function and check what it can do.
+
+```shell
+crossplane xpkg build -f package -o $BUILD/function.xpkg
+crossplane xpkg push -f $BUILD/function.xpkg localhost:5001/function-lifecycle:$TAG
+```
+
+Install it. Crossplane runs inside the cluster, so it reaches the registry at
+the registry's IP address on kind's network. A registry at a private IP address
+is plain HTTP, so there's no TLS to set up. The `DeploymentRuntimeConfig` in
+`e2e/manifests/function-lifecycle.yaml` runs the image you loaded.
+
+```shell
+REGISTRY=$(docker inspect -f '{{(index .NetworkSettings.Networks "kind").IPAddress}}' lifecycle-e2e-registry):5000
+sed -e "s#FN_PACKAGE#$REGISTRY/function-lifecycle:$TAG#" -e "s#FN_IMAGE#function-lifecycle:$TAG#" e2e/manifests/function-lifecycle.yaml | kubectl apply -f -
+kubectl get functions.pkg.crossplane.io function-lifecycle
+```
+
+After a few seconds, `HEALTHY` is `True`, and `PACKAGE` is the tag you just
+built.
+
+## Step 4: Run the e2e test
 
 ```shell
 ./e2e/run.sh
 ```
 
-It uses the kind cluster called `lifecycle-e2e`, and creates it if it's
-missing. The cluster has:
-
-- Crossplane 2.4.3, started with `--enable-operations`
-- provider-kubernetes, function-patch-and-transform, and function-auto-ready
-- your function, built from your working tree and pushed to a local registry
-- the App XRD and Composition, and three Apps
-
-Then it runs the scenarios:
+It repeats Step 3 with a fresh tag, so it always tests your current code. Then
+it runs two scenarios and checks each result:
 
 ```text
 ==> Scenario 1: Provision, then delete the App. Its ConfigMap survives.
@@ -87,10 +156,9 @@ PASS  the other App keeps Full
 All e2e checks passed.
 ```
 
-On the warm cluster it rebuilds only your function and takes under a minute.
-Without the warm-up, the first run takes about 5 minutes.
+It takes under a minute.
 
-## Step 3: Watch it catch what render can't
+## Step 5: Watch it catch what render can't
 
 Break the package. In `package/crossplane.yaml`, delete the `- operation` line
 under `capabilities`. Render the Operation as in Lab 5, and it still works:
@@ -112,24 +180,7 @@ FAIL  the Operation succeeds
 Your function would have shipped like that, and every Operation that uses it
 would fail. Put the line back, run `./e2e/run.sh` again, and it passes.
 
-## Step 4 (if you have time): Look around
-
-The cluster stays up after the test:
-
-```shell
-kubectl get apps.example.crossplane.io,managed -n default
-crossplane resource trace apps.example.crossplane.io frozen -n default
-kubectl get operations.ops.crossplane.io freeze-apps -o yaml
-```
-
-Freeze `free` by hand, and watch its `Object` change:
-
-```shell
-kubectl annotate apps.example.crossplane.io free -n default lifecycle.fn.crossplane.io/mode=ObserveOnly
-kubectl get objects.kubernetes.m.crossplane.io -n default -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
-```
-
-## Step 5: Commit the e2e test and mark the PR ready
+## Step 6: Commit the e2e test and mark the PR ready
 
 ```shell
 git add e2e/
@@ -146,6 +197,23 @@ gh pr ready
 
 CI runs on the new commit. Your PR now carries an e2e test, and anyone can
 run it with one command.
+
+## Step 7 (if you have time): Look around
+
+The cluster stays up after the test:
+
+```shell
+kubectl get apps.example.crossplane.io,managed -n default
+crossplane resource trace apps.example.crossplane.io frozen -n default
+kubectl get operations.ops.crossplane.io freeze-apps -o yaml
+```
+
+Freeze `free` by hand, and watch its `Object` change:
+
+```shell
+kubectl annotate apps.example.crossplane.io free -n default lifecycle.fn.crossplane.io/mode=ObserveOnly
+kubectl get objects.kubernetes.m.crossplane.io -n default -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
+```
 
 ## Clean up, after the session
 

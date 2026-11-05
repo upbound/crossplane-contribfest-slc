@@ -27,7 +27,7 @@ for a in "$@"; do
     *) echo "Unknown option $a. Use --e2e, --check, or nothing."; exit 1 ;;
   esac
 done
-E2E_CLUSTER=lifecycle-e2e
+E2E_CLUSTER=${CLUSTER:-lifecycle-e2e}
 
 ok=1
 if [ -t 1 ]; then g=$'\033[32m' r=$'\033[31m' y=$'\033[33m' n=$'\033[0m'; else g= r= y= n=; fi
@@ -284,14 +284,20 @@ elif ! docker info >/dev/null 2>&1; then
 elif [ $E2E = 1 ] && [ $CHECK_ONLY = 0 ]; then
   pass "docker, kind, kubectl, helm"
   # Lab 6's first run pulls about 1.5 GB of images. Do it now, not on conference
-  # Wi-Fi: run the reference function's e2e test once, and keep its cluster.
-  echo "    creating the $E2E_CLUSTER cluster and running the e2e test, about 5 minutes the first time…"
-  if git clone -q --depth 1 --branch workshop/lab-06 "$FN_REPO" "$tmp/e2e" 2>/dev/null &&
-    (cd "$tmp/e2e" && ./e2e/run.sh) >"$tmp/e2e.log" 2>&1; then
-    pass "the e2e test passes, and $E2E_CLUSTER is ready for Lab 6. kubectl now points at it."
+  # Wi-Fi: create the cluster with the reference function's e2e/cluster.sh, and
+  # run its e2e test once. Show the steps as they go, the full log on failure.
+  echo "    creating the $E2E_CLUSTER cluster and running the e2e test, about 5 minutes the first time:"
+  if git clone -q --depth 1 --branch workshop/lab-06 "$FN_REPO" "$tmp/e2e" 2>/dev/null; then
+    (cd "$tmp/e2e" && ./e2e/cluster.sh && ./e2e/run.sh) 2>&1 | tee "$tmp/e2e.log" |
+      grep --line-buffered -e '^==>' -e '^PASS' -e '^FAIL' | sed -u 's/^==> //; s/^/      /'
+    if [ "${PIPESTATUS[0]}" = 0 ]; then
+      pass "the e2e test passes, and $E2E_CLUSTER is ready for Lab 6. kubectl now points at it."
+    else
+      tail -15 "$tmp/e2e.log"
+      fail "the e2e warm-up failed. Lab 6's page has fixes under Stuck?"
+    fi
   else
-    tail -15 "$tmp/e2e.log"
-    fail "the e2e warm-up failed. Lab 6's page has fixes under Stuck?"
+    fail "couldn't clone $FN_REPO"
   fi
 elif kind get clusters 2>/dev/null | grep -qx "$E2E_CLUSTER"; then
   pass "docker, kind, kubectl, helm, and the $E2E_CLUSTER cluster for Lab 6"

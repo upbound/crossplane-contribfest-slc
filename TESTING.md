@@ -184,8 +184,9 @@ recognize the message and know the fix works:
 ## 6. Lab 6 on kind
 
 Checked on 2026-11-05 on an arm64 Mac with Colima (no buildx), from the
-function repo's `workshop/lab-06`: `./e2e/run.sh` passes all six checks. On a
-warm cluster it takes about 30 seconds. Without the `operation` capability, it
+function repo's `workshop/lab-06`: `./e2e/cluster.sh` then `./e2e/run.sh`
+passes all six checks, and Lab 6's Step 2 and Step 3 blocks work as written in
+zsh. On a warm cluster `run.sh` takes about 30 seconds. Without the `operation` capability, it
 fails in about 30 seconds with `missing required capabilities: operation`. A
 new cluster took 1:44 with the images already pulled. Pulling them adds a few
 minutes.
