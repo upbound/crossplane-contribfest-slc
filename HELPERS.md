@@ -57,8 +57,9 @@ Lab 6.
 | `xpkg init` fails with `path outside base dir` | The path goes through a symlink, such as `/tmp` on macOS | Run it under `~` |
 | `go test` fails right after `git checkout FETCH_HEAD -- fn_test.go` | Expected: the tests are ahead of the code | That's the lab. The `-want`/`+got` diff shows what's missing. |
 | render: `--crossplane-binary: stat …/crossplane-core: no such file or directory` | The flag takes a path, not a command name | `--crossplane-binary=$(which crossplane-core)`, or use `make -C example render` |
-| render: `Cannot connect to the Docker daemon` | `--crossplane-binary` is missing, so render fell back to Docker | Add `--crossplane-binary=$(which crossplane-core)` |
-| render takes 10+ seconds | `functions.yaml` targets `localhost`, which resolves slowly on some networks | Set `render.crossplane.io/runtime-development-target: 127.0.0.1:9443` (Lab 1, Step 3) |
+| render: `Cannot connect to the Docker daemon` | `--crossplane-binary` is missing, so render fell back to Docker. render reads `DOCKER_HOST` or `/var/run/docker.sock` and ignores `docker context`. | Add `--crossplane-binary=$(which crossplane-core)`. To use a container on purpose with Colima: `export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock`. With Podman: `export DOCKER_HOST=unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')` |
+| render takes 10+ seconds | `functions.yaml` targets `localhost`, which resolves slowly on some networks. Without `--crossplane-binary`, render rewrites every target to `host.docker.internal`, which has the same delay. | Set `render.crossplane.io/runtime-development-target: 127.0.0.1:9443` (Lab 1, Step 3), and keep `--crossplane-binary` |
+| Linux, render without `--crossplane-binary` hangs about a minute | The render container reaches your machine through the Docker bridge, and a function on `127.0.0.1` doesn't listen there | Start the function with `--address=:9443`, or add the flag back |
 | `make: *** example: No such file or directory` or `cd: no such file or directory: example` | The terminal isn't in `~/function-lifecycle` | `cd ~/function-lifecycle`. Every lab command runs there. |
 | render hangs about a minute, then `crossplane internal render returned error with output: : signal: killed` | A function isn't listening: yours on 9443, or function-patch-and-transform on 9444. The output is the same for both. | `lsof -nP -iTCP:9443 -iTCP:9444 -sTCP:LISTEN` shows which is missing. Start the function in terminal 1 with `go run . --insecure --debug --address=127.0.0.1:9443`. `make -C example render` starts 9444 by itself; before a hand render, run `make -C example pt`. |
 | render shows old behavior | The function wasn't restarted after a code change | `Ctrl-C` and `go run` again. `make -C example test` builds fresh. |
@@ -91,6 +92,13 @@ Lab 6.
   providers and provider-kubernetes enable them by default. Classic
   crossplane-contrib/provider-aws doesn't. The MR then errors with "set to a
   non-default value but the feature is not enabled".
+- **"What's the difference between `--crossplane-binary` and Docker?"** None
+  in what renders. Both run the same `crossplane internal render`, from the
+  Crossplane binary or from its image. Without the flag, render pulls
+  `crossplane:stable` once and never updates it (pin it with
+  `--crossplane-version`), and it rewrites function targets to
+  `host.docker.internal`. With the flag, there's no daemon, no pull, and the
+  version is the one `setup.sh` pinned.
 - **"Is `spec.forProvider` a reliable MR check?"** It's a heuristic. Asking
   Crossplane for the resource schema (`CAPABILITY_REQUIRED_SCHEMAS`, v2.2+) is
   better, and that's a curated issue.
