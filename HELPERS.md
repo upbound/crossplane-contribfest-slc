@@ -78,6 +78,8 @@ Lab 6.
 | `no space left on device` | Go's build cache is about 2 GB | `go clean -cache` frees it. The next build is slower. |
 | Lab 5: the Operation render says `on 0 resources` | `-e example/apps.yaml` is missing, so the Operation's requirement matched nothing | Add `-e example/apps.yaml`. It stands in for the Apps in a cluster. |
 | Lab 5 `docker build` fails on `RUN --mount` or `BUILDPLATFORM` | Docker without BuildKit, for example Colima without `buildx` | Skip it. CI builds the package. |
+| Lab 6: `kind create cluster` fails with `could not find a log line that matches "Reached target .*Multi-User System.*"` | Too many kind clusters for Docker's inotify limit | Stop clusters you don't need, or raise the limit. On Colima: `colima ssh -- sudo sysctl -w fs.inotify.max_user_instances=512` |
+| Lab 6: `Crossplane didn't install your build within 5 minutes` | The package didn't install. Often `package/crossplane.yaml` doesn't parse | `kubectl describe functions.pkg.crossplane.io function-lifecycle` and `kubectl get functionrevisions` show why |
 | `unknown field` in input | `request.GetInput` rejects unknown fields | Check the input YAML against `input/v1beta1/input.go`, and rerun `go generate ./...` |
 | `-want rsp, +got rsp` diff | A test failure | Lines with `-` are expected, `+` are actual. Usually a message string or a missing condition. |
 | `crossplane beta trace: unknown command` | CLI v2.5 renamed it | `crossplane resource trace` |

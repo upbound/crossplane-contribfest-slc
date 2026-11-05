@@ -1,7 +1,0 @@
-apiVersion: example.crossplane.io/v1
-kind: App
-metadata:
-  name: my-app
-  namespace: default
-spec:
-  parameters: {}

@@ -1,117 +1,169 @@
-# Lab 6 (take-home): See it on a cluster
+# Lab 6 (take-home): Local e2e, then mark the PR ready
 
-**Objective**: Run the function in a real control plane. Freeze a resource,
-then delete an XR without deleting what it manages.
+**Objective**: Test your function on a real control plane on your laptop. Then
+tick the e2e box in your draft PR and mark it ready for review.
 
-⏱ **20 minutes**, most of it waiting for images
+⏱ **20 minutes**, most of it pulling images on the first run
 
 ---
 
 ## 🎯 Learning Objectives
 
-- Install functions and a provider into Crossplane v2
-- Watch management policies change on live managed resources
-- Orphan external resources safely, in two phases
+- Know what an e2e test catches that unit tests and render can't
+- Build your function from your working tree and test it on a local kind
+  cluster
+- Keep a PR as a draft until it's proven, then mark it ready
 
 ## 📋 Prerequisites
 
-- [ ] Docker, kind, helm, and kubectl. `setup.sh` doesn't install these.
-- [ ] About 4 GB of free Docker disk
+- [ ] Completed Lab 5, with a draft PR
+- [ ] Docker (Docker Desktop or Colima), kind, kubectl, and helm. `setup.sh`
+  doesn't install these.
+- [ ] About 4 GB of free memory for Docker
+
+## Why e2e
+
+Render runs your function against a pretend cluster. It proves what your
+function returns. It can't prove what happens next:
+
+- Crossplane installs your package and checks it. For example, an Operation
+  only runs a function whose package declares the `operation` capability.
+  Render never reads `package/crossplane.yaml`.
+- The provider acts on `managementPolicies`. Deleting a Provision XR must
+  leave its resources behind.
+- Crossplane applies an Operation's patch with server-side apply, using its own
+  permissions.
 
 ---
 
-## Step 1: Create the control plane
-
-From the root of this repo:
+## Step 1: Get the e2e test
 
 ```shell
-./demo/setup.sh
+cd ~/function-lifecycle
+git fetch https://github.com/upbound/function-lifecycle workshop/lab-06
+git checkout FETCH_HEAD -- e2e/
 ```
 
-This creates a kind cluster with Crossplane 2.4.3, provider-kubernetes, and
-three functions: patch-and-transform, lifecycle, and auto-ready. To use your
-own build instead of the released package, push it first and then run:
+Open `e2e/run.sh`. The first half sets up a kind cluster. The second half runs
+two scenarios and prints `PASS` or `FAIL` for each check. `e2e/manifests/`
+holds the App XRD, a Composition that wraps a ConfigMap in a provider-kubernetes
+`Object`, three Apps, and the freeze Operation.
+
+## Step 2: Run it
 
 ```shell
-FN_PACKAGE=ghcr.io/<you>/function-lifecycle:<tag> ./demo/setup.sh
+./e2e/run.sh
 ```
 
-## Step 2: Create an XR
+It creates a kind cluster called `lifecycle-e2e`, with:
+
+- Crossplane 2.4.3, started with `--enable-operations`
+- provider-kubernetes, function-patch-and-transform, and function-auto-ready
+- your function, built from your working tree and pushed to a local registry
+- the App XRD and Composition, and three Apps
+
+Then it runs the scenarios:
+
+```text
+==> Scenario 1: Provision, then delete the App. Its ConfigMap survives.
+PASS  Provision sets the Object's policies
+PASS  the ConfigMap outlives the App
+
+==> Scenario 2: an Operation freezes the Apps labelled freeze: "true".
+PASS  the Operation succeeds
+PASS  the Operation annotates the labelled App
+PASS  the composition applies ObserveOnly
+PASS  the other App keeps Full
+
+All e2e checks passed.
+```
+
+The first run takes about 5 minutes. Later runs reuse the cluster, rebuild only
+your function, and take under a minute.
+
+## Step 3: Watch it catch what render can't
+
+Break the package. In `package/crossplane.yaml`, delete the `- operation` line
+under `capabilities`. Render the Operation as in Lab 5, and it still works:
+render never reads the package metadata. Run the e2e test again:
 
 ```shell
-kubectl apply -f demo/manifests/xr.yaml
-crossplane resource trace app my-app
-kubectl get configmap my-app-config -o yaml
+./e2e/run.sh
 ```
 
-A provider-kubernetes Object, `config`, created that ConfigMap. The Object is
-a managed resource. The `settings` ConfigMap is a plain object, so the
-function skips it.
+It takes about a minute this time, because Crossplane retries the Operation
+five times before it gives up:
 
-## Step 3: Freeze it
+```text
+FAIL  the Operation succeeds
+      Succeeded: failure limit of 5 reached
+      ValidPipeline: function capability check failed: function "function-lifecycle" (active revision "…") is missing required capabilities: operation
+```
+
+Your function would have shipped like that, and every Operation that uses it
+would fail. Put the line back, run `./e2e/run.sh` again, and it passes.
+
+## Step 4: Look around (optional)
+
+The cluster stays up after the test:
 
 ```shell
-kubectl annotate app my-app lifecycle.fn.crossplane.io/mode=ObserveOnly
-kubectl get objects.kubernetes.m.crossplane.io -l crossplane.io/composite=my-app \
-  -o jsonpath='{.items[*].spec.managementPolicies}'
+kubectl get apps.example.crossplane.io,managed -n default
+crossplane resource trace apps.example.crossplane.io frozen -n default
+kubectl get operations.ops.crossplane.io freeze-apps -o yaml
 ```
 
-The Object now has `["Observe"]`. Change the ConfigMap behind Crossplane's back,
-and wait for a poll:
+Freeze `free` by hand, and watch its `Object` change:
 
 ```shell
-kubectl patch configmap my-app-config --type merge -p '{"data":{"owner":"someone-else"}}'
-sleep 90 && kubectl get configmap my-app-config -o jsonpath='{.data.owner}'
+kubectl annotate apps.example.crossplane.io free -n default lifecycle.fn.crossplane.io/mode=ObserveOnly
+kubectl get objects.kubernetes.m.crossplane.io -n default -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
 ```
 
-It still says `someone-else`: drift isn't reverted while the XR is frozen.
-Unfreeze it, and Crossplane reverts the drift on the next poll:
+## Step 5: Commit the e2e test and mark the PR ready
 
 ```shell
-kubectl annotate app my-app lifecycle.fn.crossplane.io/mode-
+git add e2e/
+git commit -s -m "test: add a local e2e test on kind"
+git push
 ```
 
-## Step 4: Delete the XR, keep the resource
-
-Switch to Provision, which never deletes, and wait until the Object has the
-new policies:
+On GitHub, tick **Ran the e2e test on a local cluster** in your PR's
+description. Then mark it ready for review:
 
 ```shell
-kubectl annotate app my-app lifecycle.fn.crossplane.io/mode=Provision --overwrite
-kubectl wait objects.kubernetes.m.crossplane.io -l crossplane.io/composite=my-app \
-  --for=jsonpath='{.spec.managementPolicies[3]}'=LateInitialize --timeout 2m
+gh pr ready
 ```
 
-Then delete the XR. The ConfigMap is still there:
-
-```shell
-kubectl delete app my-app
-kubectl get configmap my-app-config
-```
-
-> **⚠️ Two phases matter.** If you delete before Crossplane applies the new
-> policies, the old `["*"]` still includes Delete.
-
-## Step 5: Take it back
-
-```shell
-kubectl apply -f demo/manifests/xr.yaml
-crossplane resource trace app my-app
-```
-
-The new Object adopts the existing ConfigMap.
+CI runs on the new commit. Your PR now carries an e2e test, and anyone can
+run it with one command.
 
 ## Clean up
 
 ```shell
-kind delete cluster --name contribfest
+kind delete cluster --name lifecycle-e2e
+docker rm -f lifecycle-e2e-registry
 ```
 
 ---
 
 ## ✅ Done when
 
-The ConfigMap survived `kubectl delete app my-app`.
+- `./e2e/run.sh` prints `All e2e checks passed.`
+- Your PR is ready for review, with the e2e box ticked
 
-**Next:** a [curated issue](../CURATED-ISSUES.md). The e2e test you just ran by
-hand is one of them.
+## 🛟 Stuck?
+
+`kind create cluster` fails with `could not find a log line that matches
+"Reached target .*Multi-User System.*"`: too many kind clusters are running for
+Docker's inotify limit. Stop the ones you don't need, or raise the limit. On
+Colima:
+
+```shell
+colima ssh -- sudo sysctl -w fs.inotify.max_user_instances=512
+```
+
+More in [HELPERS](../HELPERS.md#common-problems).
+
+**Next:** [Curated issues](../CURATED-ISSUES.md). Number 11 runs this e2e test
+in CI.

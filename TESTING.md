@@ -39,7 +39,7 @@ These can't be checked without you:
 - Anything that needs GitHub: catch-up from the real URL, Lab 5 PRs and CI,
   and setup warming the function-lifecycle modules.
 - A newcomer's pace against the time boxes.
-- Lab 6 and the demo on kind.
+- Lab 6 by a first-time attendee, and the demo rehearsal.
 - How the deck renders on the venue projector.
 - Conference-like network conditions.
 
@@ -53,7 +53,7 @@ Sections 3–6 need these:
       `upbound`, so an org owner has to change the visibility. Until then,
       give testers access.
 - [x] Registry: `ghcr.io/upbound/function-lifecycle`, for vendor neutrality
-      (2026-11-04). CI pushes there; the examples and `demo/setup.sh` say so.
+      (2026-11-04). CI pushes there; the examples say so.
 - [ ] Release v0.1.0: run CI with `version: v0.1.0`, then make the ghcr.io
       package public. It's private like the repo, so a cluster can't pull it.
 - [ ] File the curated issues on function-lifecycle with the `contribfest`
@@ -182,11 +182,15 @@ recognize the message and know the fix works:
 
 ## 6. Demo and Lab 6 on kind (presenter laptop)
 
-- [ ] `./demo/setup.sh` from scratch. Time it, since it pulls images.
-- [ ] Run the demo slide's script end to end: freeze, then orphan, then adopt.
-      Aim for under 5 minutes.
-- [ ] Run Lab 6 as written, then Full mode: deleting the XR deletes the
-      ConfigMap.
+Checked on 2026-11-05 on an arm64 Mac with Colima (no buildx), from the
+function repo's `main`: `./e2e/run.sh` passes all six checks. A warm rerun
+takes about 20 seconds. Without the `operation` capability, it fails with
+`missing required capabilities: operation`.
+
+- [ ] Lab 6 as written, from a fresh attendee repo after Lab 5, against the
+      real `workshop/lab-06` tag. Time the first run.
+- [ ] The demo: a warm `./e2e/run.sh`, then the dropped-capability run. Keep
+      the failing output in a second terminal in case the retries run long.
 - [ ] Record the demo video as the Wi-Fi fallback.
 
 ## 7. Deck
