@@ -122,6 +122,19 @@ crossplane composition render example/xr.yaml example/composition.yaml example/f
 > `signal: killed`, nothing is listening on `127.0.0.1:9443`. Check that the
 > function is running in terminal 1.
 
+> 💡 **Port trouble?** See what's listening on 9443. No output means nothing:
+>
+> ```shell
+> lsof -nP -iTCP:9443 -sTCP:LISTEN
+> ```
+>
+> If `go run` fails with `bind: address already in use`, an old copy still
+> holds the port. Stop it, then `go run` again:
+>
+> ```shell
+> lsof -t -iTCP:9443 -sTCP:LISTEN | xargs kill
+> ```
+
 ---
 
 ## ✅ Done when

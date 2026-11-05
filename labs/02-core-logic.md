@@ -77,6 +77,19 @@ If the shell says `command not found`, `~/.local/bin` isn't on this
 terminal's `PATH`: see the first row of
 [HELPERS](../HELPERS.md#common-problems).
 
+> 💡 **`bind: address already in use`?** Something still holds port 9444.
+> See what it is:
+>
+> ```shell
+> lsof -nP -iTCP:9444 -sTCP:LISTEN
+> ```
+>
+> Stop it, then start function-patch-and-transform again:
+>
+> ```shell
+> lsof -t -iTCP:9444 -sTCP:LISTEN | xargs kill
+> ```
+
 ## Step 2: Map modes to policies
 
 Create `mode.go`:
