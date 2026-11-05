@@ -33,30 +33,123 @@ It prints `PASS` for all seven examples.
 
 ## Step 1: Lint
 
-CI runs golangci-lint. Run the same version locally, then let Go fix what it
-can:
+CI runs golangci-lint. Run the same version locally:
 
 ```shell
 golangci-lint run ./...
+```
+
+Each issue reads `file:line:column: message (linter)`. Ignore the two
+`level=warning` lines about `gomodguard` at the top: see the tip at the end of
+this step. The output ends with a count per linter:
+
+```text
+17 issues:
+* gochecknoglobals: 1
+* goconst: 3
+* modernize: 12
+* revive: 1
+```
+
+Four fixes get that to zero. Run `golangci-lint run ./...` after each one to
+check the count.
+
+### Fix 1: let Go fix the 12 `modernize` issues
+
+```shell
 go fix ./...
 ```
 
-Lint reports 17 issues. `go fix` applies the 12 `modernize` fixes: Go 1.26
-accepts `new("text")`, so every `ptr("text")` in `fn_test.go` becomes
-`new("text")`.
+Go 1.26 accepts `new("text")`, so `go fix` replaces every `ptr("text")` in
+`fn_test.go` with it. That leaves the `ptr` helper unused, so lint now reports
+two new issues on it. Delete these four lines from `fn_test.go`, around line
+54:
 
-Now delete the `ptr` helper in `fn_test.go`: the `func ptr` line and the
-comment lines above it, from `// ptr returns a pointer to the supplied value.`
-down. `go fix` added `//go:fix inline` to that comment. Until the helper is
-gone, lint also reports it as `unused` and flags the directive.
+```go
+// ptr returns a pointer to the supplied value.
+//
+//go:fix inline
+func ptr[T any](v T) *T { return new(v) }
+```
 
-The other five are yours:
+Lint now reports **5 issues**.
 
-| Linter | Where | Fix |
-|---|---|---|
-| `gochecknoglobals` | `mode.go`: `policies is a global variable` | Turn the map into a `switch` inside `Policies()`. |
-| `revive` | `fn.go`: an error string ends with punctuation | Reword the `modeRef` error to `modeRef %q must be a spec., status., or context. path`, and update the matching test. |
-| `goconst` | `fn_test.go`: `bucket`, `LifecycleMode`, and `ObserveOnly` repeated | Table tests repeat literals on purpose. In `.golangci.yml`, add `goconst` to the linters excluded for `_test(ing)?\.go`, the list that starts with `containedctx`. |
+### Fix 2: `mode.go` has a global variable (`gochecknoglobals`)
+
+Any code in the package can change a package-level variable, so the linter
+doesn't allow them. In `mode.go`, replace everything from `var policies` to the
+end of the file with a `switch`:
+
+```go
+// Policies returns the management policies for the mode. Every set is one of
+// the combinations crossplane-runtime supports.
+func (m Mode) Policies() ([]string, error) {
+	switch m {
+	case ModeFull:
+		return []string{"*"}, nil
+	case ModeProvision:
+		return []string{"Observe", "Create", "Update", "LateInitialize"}, nil
+	case ModeObserveOnly:
+		return []string{"Observe"}, nil
+	case ModeDeprovision:
+		return []string{"Observe", "Create", "Delete"}, nil
+	default:
+		return nil, errors.Errorf("unknown mode %q: must be one of Full, Provision, ObserveOnly, Deprovision", m)
+	}
+}
+```
+
+Lint now reports **4 issues**.
+
+### Fix 3: `fn.go` has an error string that ends with punctuation (`revive`)
+
+Go wraps error strings into longer messages, so they shouldn't end with
+punctuation. The `modeRef` error in `lookup` ends with `context.`. This finds
+it, and the test that checks the exact message:
+
+```shell
+grep -n 'must start with' fn.go fn_test.go
+```
+
+In both files, change `must start with spec., status., or context.` to
+`must be a spec., status., or context. path`. In `fn.go` the line becomes:
+
+```go
+		return "", errors.Errorf("modeRef %q must be a spec., status., or context. path", ref)
+```
+
+In `fn_test.go`:
+
+```go
+							Message:  `modeRef "metadata.name" must be a spec., status., or context. path`,
+```
+
+Lint now reports **3 issues**.
+
+### Fix 4: `fn_test.go` repeats strings (`goconst`)
+
+Table tests repeat values such as `bucket` on purpose, so turn `goconst` off
+for test files instead. In `.golangci.yml`, find the exclusion rule that ends
+with `path: _test(ing)?\.go`, about 155 lines down. Add `goconst` to its list
+of linters, after `gocognit`:
+
+```yaml
+      - linters:
+          - containedctx
+          - errcheck
+          - forcetypeassert
+          - gochecknoglobals
+          - gochecknoinits
+          - gocognit
+          - goconst            # add this
+          - gosec
+          - scopelint
+          - unparam
+          - embeddedstructfieldcheck
+        path: _test(ing)?\.go
+```
+
+### Check
 
 ```shell
 golangci-lint run ./...
@@ -67,6 +160,13 @@ Lint reports `0 issues`, and the tests pass.
 
 > 💡 The warning about `gomodguard` being deprecated comes from the template's
 > `.golangci.yml`. That's another upstream fix you could make.
+
+> 🛟 Short on time? This copies all four fixes from the reference:
+>
+> ```shell
+> git fetch https://github.com/upbound/function-lifecycle workshop/lab-05
+> git checkout FETCH_HEAD -- fn.go fn_test.go mode.go .golangci.yml
+> ```
 
 ## Step 2: README and package metadata
 
