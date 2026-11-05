@@ -7,7 +7,7 @@ fast.
 
 - Get everyone to a green `✅ Done when` before the mission card on screen moves on.
 - If someone's stuck on Go rather than on Crossplane, point them to **Show
-  solution** in Labs 2–4. It's the reference code, ready to paste.
+  solution** in Labs 2–5. It's the reference code, ready to paste.
 - If someone's more than one lab behind, use the **catch-up** command. Don't
   debug their code while the room moves on. Offer to look at it afterwards.
 - From Lab 5 on, help fast finishers pick a `contribfest` issue and get a PR
@@ -23,8 +23,9 @@ In `~/function-lifecycle`:
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-0N && git read-tree -u --reset FETCH_HEAD
 ```
 
-Step 1 of Labs 2–4 fetches `workshop/lab-0N-start` instead: the finished
-previous lab, with `TODO(lab-0N)` markers in `fn.go`. It replaces only the files
+Step 1 of Labs 2–5 fetches `workshop/lab-0N-start` instead: the finished
+previous lab, with `TODO(lab-0N)` markers where the new code goes (`fn.go`, and
+in Lab 5 also `operation.go` and `package/crossplane.yaml`). It replaces only the files
 it lists, so it's not a catch-up. If someone's earlier code is broken, catch up
 first, then do Step 1.
 
@@ -73,8 +74,9 @@ Lab 6.
 | `test.sh`: `Nothing is listening on 127.0.0.1:9443` (or `:9444`) | Your function (9443) or function-patch-and-transform (9444) isn't running | Start it in terminal 1 or terminal 3, as in Lab 2, Step 1 |
 | `bind: address already in use` | An old copy of the function, or of function-patch-and-transform, still holds the port | `lsof -nP -iTCP:9443 -sTCP:LISTEN` shows what it is. `lsof -t -iTCP:9443 -sTCP:LISTEN \| xargs kill` stops it. Use `9444` for function-patch-and-transform. |
 | macOS asks whether to accept incoming network connections | The function was started without `--address=127.0.0.1:9443`, so it listens on every interface | Click Allow, or restart it with the flag as the labs show |
-| Lab 5: `nothing to commit, working tree clean` | A catch-up with `git reset --hard` moved `main` to a tag | On `main`: `git reset --soft $(git rev-list --max-parents=0 HEAD)`. That moves `main` back to the first commit, the scaffold, and keeps the files. Then Step 4 again. |
+| Lab 5: `nothing to commit, working tree clean` | A catch-up with `git reset --hard` moved `main` to a tag | On `main`: `git reset --soft $(git rev-list --max-parents=0 HEAD)`. That moves `main` back to the first commit, the scaffold, and keeps the files. Then Step 7 again. |
 | `no space left on device` | Go's build cache is about 2 GB | `go clean -cache` frees it. The next build is slower. |
+| Lab 5: the Operation render says `on 0 resources` | `-e example/apps.yaml` is missing, so the Operation's requirement matched nothing | Add `-e example/apps.yaml`. It stands in for the Apps in a cluster. |
 | Lab 5 `docker build` fails on `RUN --mount` or `BUILDPLATFORM` | Docker without BuildKit, for example Colima without `buildx` | Skip it. CI builds the package. |
 | `unknown field` in input | `request.GetInput` rejects unknown fields | Check the input YAML against `input/v1beta1/input.go`, and rerun `go generate ./...` |
 | `-want rsp, +got rsp` diff | A test failure | Lines with `-` are expected, `+` are actual. Usually a message string or a missing condition. |

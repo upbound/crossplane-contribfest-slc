@@ -11,15 +11,17 @@ unreachable):
 
 - Every `workshop/lab-0N` tag builds and passes `go test`, and its renders give
   the expected output.
-- Every `workshop/lab-0N-start` tag (Labs 2–4) differs from `workshop/lab-0N`
-  only in `fn.go`. Each lab page's **Show solution** turns its markers back
+- Every `workshop/lab-0N-start` tag (Labs 2–5) differs from `workshop/lab-0N`
+  only in the files with `TODO(lab-0N)` markers (Lab 5 also: the tests before
+  `go fix`, and the template leftovers). Each lab page's **Show solution** turns its markers back
   into the reference code (checked 2026-11-05).
 - Labs 1–5 walked through as an attendee would. The lab pages' commands were
   used as written, the reference repo was a local path, and each lab's code was
   taken from its tag.
 - `scripts/setup.sh` from cold caches: done in 72 seconds (about 235 MB downloaded, 3 GB of disk), smoke test
   passes, and `--check` passes three times in a row.
-- golangci-lint finds 17 issues on the Lab 4 code and 0 on Lab 5.
+- golangci-lint finds 12 `modernize` issues on the Lab 4 code, all fixed by
+  `go fix`, and 0 on Lab 5 (checked 2026-11-05).
 
 On 2026-11-04, two emulated first-time attendees ran the start slide and Labs
 1–5 in a sandbox laptop (own HOME, cold caches, stock make). They wrote the
@@ -113,7 +115,7 @@ lab pages, not this file. Record times against the time boxes.
 | 2. Core logic | 15 min | | | |
 | 3. Generalize | 10 min | | | |
 | 4. Debug | 8 min | | | |
-| 5. PR-ready | 10 min | | | |
+| 5. Operations and the PR | 12 min | | | |
 
 Things to watch:
 
@@ -135,7 +137,8 @@ Things to watch:
   - With a function stopped, it says which port has nothing listening.
   - The hand renders with `-r -x` and `-c` work.
 - [ ] **Lab 5**:
-  - golangci-lint reports 17 findings, then 0 after the fixes.
+  - The Operation render patches `checkout` and `payments`, not `sandbox`.
+  - golangci-lint reports 12 findings, then 0 after `go fix` and deleting `ptr`.
   - Path A: `gh repo create` and `gh pr create` work, and CI starts. Note how
     long the multi-arch build takes.
 - [ ] **Lab 5, Path B**: fork upstream, branch, PR against a real `contribfest`
@@ -152,10 +155,10 @@ From a directory where the previous lab went wrong (leave a compile error in
 - [ ] `workshop/lab-02`, `lab-03`, `lab-04`, `lab-05`: after each, run
       `go test ./...` and that lab's done-when command. `git log` still shows
       only the scaffold commit.
-- [ ] After the `workshop/lab-05` catch-up, Lab 5 Step 4 commits the whole
+- [ ] After the `workshop/lab-05` catch-up, Lab 5 Step 7 commits the whole
       function on `pr-ready`.
-- [ ] Labs 2–4, Step 1 (`workshop/lab-0N-start`) on top of a clean previous
-      tag: `grep -n 'TODO(lab-0N)' fn.go` finds the markers, and the page's
+- [ ] Labs 2–5, Step 1 (`workshop/lab-0N-start`) on top of a clean previous
+      tag: `grep -n 'TODO(lab-0N)'` finds the markers, and the page's
       **Show solution** makes `go test ./...` pass.
 
 ## 5. Things that will go wrong in the room

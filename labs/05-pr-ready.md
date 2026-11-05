@@ -1,17 +1,21 @@
-# Lab 5: PR-ready
+# Lab 5: Operations and the PR
 
-**Objective**: Get the function past the checks a maintainer runs before they
-read your code, then open a pull request.
+**Objective**: Run the same function as a step of an Operation, so one
+Operation can freeze a whole fleet of XRs. Then get it past lint and open a
+pull request.
 
-⏱ **10 minutes**
+⏱ **12 minutes**
 
 ---
 
 ## 🎯 Learning Objectives
 
-- Run the same lint CI runs, and fix what it finds
-- Know what README and package metadata a user needs
-- Sign off commits (DCO), open a PR, and fill in its template
+- Run one function in Compositions and in Operations, and declare both
+  capabilities
+- Read the resources an Operation requires, and return server-side apply
+  patches
+- Render an Operation without a cluster
+- Run the lint CI runs, and open a signed-off PR
 
 ## 📋 Prerequisites
 
@@ -31,7 +35,143 @@ It prints `PASS` for all seven examples.
 
 ---
 
-## Step 1: Lint
+## The idea
+
+Labs 2–4 built a composition step: each XR's own annotation, field, or context
+picks its mode. To freeze one XR, an operator runs `kubectl annotate`. To
+freeze fifty XRs every Friday evening, you need something else.
+
+An [Operation](https://docs.crossplane.io/latest/operations/operation/) runs a
+function pipeline outside any Composition: once (Operation), on a schedule
+(CronOperation), or when a resource changes (WatchOperation). The Operation
+tells Crossplane which resources to pass the function, as *required
+resources*. Crossplane applies whatever the function returns as desired
+resources, with server-side apply.
+
+So the same function gets a second job. In an Operation, it sets the mode
+annotation on every XR the Operation selects. The composition step you built
+applies that mode on each XR's next reconcile.
+
+## Step 1: Get the starting code, the tests, and the examples
+
+```shell
+cd ~/function-lifecycle
+git fetch https://github.com/upbound/function-lifecycle workshop/lab-05-start
+git checkout FETCH_HEAD -- fn.go operation.go operation_test.go
+git checkout FETCH_HEAD -- example/ README.md package/crossplane.yaml
+```
+
+The checkout adds `operation.go`, its tests in `operation_test.go`, and the
+Operation examples. It also brings the finished README and package metadata,
+and the finished Lab 4 code in `fn.go`. Your commits stay as they are.
+
+Have a look at `example/operation.yaml`. Its input sets `mode: ObserveOnly`,
+and its `requirements` select every App labelled `freeze: "true"`.
+
+## Step 2: Run as an Operation
+
+Three markers show where your code goes. This lists them with their line
+numbers:
+
+```shell
+grep -n 'TODO(lab-05)' fn.go operation.go package/crossplane.yaml
+```
+
+| Marker | Your code |
+|---|---|
+| `TODO(lab-05) 1`, `fn.go` | No XR means an Operation: hand over to `runOperation` |
+| `TODO(lab-05) 2`, `operation.go` | Build the patch for each required resource |
+| `TODO(lab-05) 3`, `package/crossplane.yaml` | Declare that the function also works in Operations |
+
+Read `runOperation` in `operation.go` first. Two things in it are new:
+
+- `request.GetRequiredResources(req)` returns the resources the Operation
+  asked for, by requirement name. In `example/operation.yaml` that's `apps`.
+- The patch holds only what identifies the resource, plus the annotation.
+  Crossplane applies it with server-side apply, so the function owns that one
+  annotation and nothing else on the XR.
+
+For `TODO(lab-05) 3`: a function package without `capabilities` counts as
+composition-only, and Crossplane won't run it in an Operation. A
+`capabilities` list replaces that default, so list both.
+
+```shell
+go test -v -run TestRunOperation ./...
+```
+
+If the Go gets in your way, open the solution.
+
+<details>
+<summary>Show solution: all three markers</summary>
+
+In `fn.go`, replace `TODO(lab-05) 1` with:
+
+```go
+	// An Operation has no XR. There the function sets the mode annotation on
+	// the resources the Operation requires instead. See operation.go.
+	if req.GetObserved().GetComposite() == nil {
+		return f.runOperation(req, rsp), nil
+	}
+```
+
+In `operation.go`, replace `TODO(lab-05) 2` and the `patch` line above it with:
+
+```go
+			patch := &unstructured.Unstructured{}
+			patch.SetAPIVersion(r.Resource.GetAPIVersion())
+			patch.SetKind(r.Resource.GetKind())
+			patch.SetNamespace(r.Resource.GetNamespace())
+			patch.SetName(r.Resource.GetName())
+			patch.SetAnnotations(map[string]string{AnnotationMode: string(mode)})
+```
+
+In `package/crossplane.yaml`, replace `TODO(lab-05) 3` and `spec: {}` with:
+
+```yaml
+spec:
+  # Without capabilities, Crossplane treats a function as composition-only.
+  capabilities:
+  - composition
+  - operation
+```
+
+</details>
+
+Then run every test:
+
+```shell
+go test -v ./...
+```
+
+## Step 3: Render the Operation
+
+Restart the function in terminal 1 (`Ctrl-C`, then
+`go run . --insecure --debug --address=127.0.0.1:9443`) so it runs your new
+code. Then in terminal 2:
+
+```shell
+crossplane operation render example/operation.yaml example/functions.yaml \
+  -e example/apps.yaml -r --crossplane-binary=$(which crossplane-core)
+```
+
+`-e` passes the three Apps in `example/apps.yaml` as if they were in the
+cluster. In the output:
+
+- The Operation's `status.appliedResourceRefs` lists `checkout` and
+  `payments`, the two Apps labelled `freeze: "true"`. It leaves `sandbox`
+  alone.
+- Then comes the patch for each one. It has only the mode annotation.
+- The result says `Set lifecycle.fn.crossplane.io/mode to ObserveOnly on 2
+  resources`.
+
+`example/cronoperation.yaml` runs the same pipeline at 17:00 every Friday.
+Render it the same way, with `example/cronoperation.yaml` in place of
+`example/operation.yaml`.
+
+> 💡 Operations are alpha. On a cluster, start Crossplane with
+> `--enable-operations`.
+
+## Step 4: Lint
 
 CI runs golangci-lint. Run the same version locally:
 
@@ -39,31 +179,16 @@ CI runs golangci-lint. Run the same version locally:
 golangci-lint run ./...
 ```
 
-Each issue reads `file:line:column: message (linter)`. Ignore the two
-`level=warning` lines about `gomodguard` at the top: see the tip at the end of
-this step. The output ends with a count per linter:
-
-```text
-17 issues:
-* gochecknoglobals: 1
-* goconst: 3
-* modernize: 12
-* revive: 1
-```
-
-Four fixes get that to zero. Run `golangci-lint run ./...` after each one to
-check the count.
-
-### Fix 1: let Go fix the 12 `modernize` issues
+It finds 12 `modernize` issues, all in `fn_test.go`. Go 1.26 accepts
+`new("text")`, so the tests' `ptr("text")` helper isn't needed any more. One
+command fixes all 12:
 
 ```shell
 go fix ./...
 ```
 
-Go 1.26 accepts `new("text")`, so `go fix` replaces every `ptr("text")` in
-`fn_test.go` with it. That leaves the `ptr` helper unused, so lint now reports
-two new issues on it. Delete these four lines from `fn_test.go`, around line
-54:
+That leaves the helper unused. Delete its four lines from `fn_test.go`, around
+line 54:
 
 ```go
 // ptr returns a pointer to the supplied value.
@@ -71,85 +196,6 @@ two new issues on it. Delete these four lines from `fn_test.go`, around line
 //go:fix inline
 func ptr[T any](v T) *T { return new(v) }
 ```
-
-Lint now reports **5 issues**.
-
-### Fix 2: `mode.go` has a global variable (`gochecknoglobals`)
-
-Any code in the package can change a package-level variable, so the linter
-doesn't allow them. In `mode.go`, replace everything from `var policies` to the
-end of the file with a `switch`:
-
-```go
-// Policies returns the management policies for the mode. Every set is one of
-// the combinations crossplane-runtime supports.
-func (m Mode) Policies() ([]string, error) {
-	switch m {
-	case ModeFull:
-		return []string{"*"}, nil
-	case ModeProvision:
-		return []string{"Observe", "Create", "Update", "LateInitialize"}, nil
-	case ModeObserveOnly:
-		return []string{"Observe"}, nil
-	case ModeDeprovision:
-		return []string{"Observe", "Create", "Delete"}, nil
-	default:
-		return nil, errors.Errorf("unknown mode %q: must be one of Full, Provision, ObserveOnly, Deprovision", m)
-	}
-}
-```
-
-Lint now reports **4 issues**.
-
-### Fix 3: `fn.go` has an error string that ends with punctuation (`revive`)
-
-Go wraps error strings into longer messages, so they shouldn't end with
-punctuation. The `modeRef` error in `lookup` ends with `context.`. This finds
-it, and the test that checks the exact message:
-
-```shell
-grep -n 'must start with' fn.go fn_test.go
-```
-
-In both files, change `must start with spec., status., or context.` to
-`must be a spec., status., or context. path`. In `fn.go` the line becomes:
-
-```go
-		return "", errors.Errorf("modeRef %q must be a spec., status., or context. path", ref)
-```
-
-In `fn_test.go`:
-
-```go
-							Message:  `modeRef "metadata.name" must be a spec., status., or context. path`,
-```
-
-Lint now reports **3 issues**.
-
-### Fix 4: `fn_test.go` repeats strings (`goconst`)
-
-Table tests repeat values such as `bucket` on purpose, so turn `goconst` off
-for test files instead. In `.golangci.yml`, find the exclusion rule that ends
-with `path: _test(ing)?\.go`, about 155 lines down. Add `goconst` to its list
-of linters, after `gocognit`:
-
-```yaml
-      - linters:
-          - containedctx
-          - errcheck
-          - forcetypeassert
-          - gochecknoglobals
-          - gochecknoinits
-          - gocognit
-          - goconst            # add this
-          - gosec
-          - scopelint
-          - unparam
-          - embeddedstructfieldcheck
-        path: _test(ing)?\.go
-```
-
-### Check
 
 ```shell
 golangci-lint run ./...
@@ -161,33 +207,25 @@ Lint reports `0 issues`, and the tests pass.
 > 💡 The warning about `gomodguard` being deprecated comes from the template's
 > `.golangci.yml`. That's another upstream fix you could make.
 
-> 🛟 Short on time? This copies all four fixes from the reference:
->
-> ```shell
-> git fetch https://github.com/upbound/function-lifecycle workshop/lab-05
-> git checkout FETCH_HEAD -- fn.go fn_test.go mode.go .golangci.yml
-> ```
-
-## Step 2: README and package metadata
+## Step 5: README and package metadata
 
 Users read the README. Registries and the Marketplace show the
 `meta.crossplane.io` annotations in `package/crossplane.yaml`. A good README
-takes longer than this lab, so start from the reference and make it yours.
-These commands also delete two template leftovers, `NOTES.txt` and `init.sh`:
+takes longer than this lab, so Step 1 brought the reference ones. Read both,
+and make them yours.
+
+The README covers what a user needs: what the function does, the modes, a
+pipeline snippet, the precedence order, recipes such as "delete the XR, keep
+the cloud resources", running it from an Operation, and the caveats. Change
+anything you'd say differently. Writing one from scratch is a good take-home.
+
+Then delete two template leftovers:
 
 ```shell
-cd ~/function-lifecycle
-git fetch https://github.com/upbound/function-lifecycle workshop/lab-05
-git checkout FETCH_HEAD -- README.md package/crossplane.yaml
 rm NOTES.txt init.sh
 ```
 
-Read both. The README covers what a user needs: what the function does, the
-modes, a pipeline snippet, the precedence order, recipes such as "delete the
-XR, keep the cloud resources", and the caveats. Change anything you'd say
-differently. Writing one from scratch is a good take-home.
-
-## Step 3: Check the package builds (optional, needs Docker)
+## Step 6: Check the package builds (optional, needs Docker)
 
 CI builds the multi-arch runtime image and the package on every pull request,
 so you can skip this step. If you have Docker with BuildKit, build it locally:
@@ -201,7 +239,7 @@ crossplane xpkg build -f package --embed-runtime-image=runtime
 > `BUILDPLATFORM`, your Docker has no BuildKit. Colima without `buildx` is
 > one example. Skip the step and let CI build it.
 
-## Step 4: Commit and open a PR
+## Step 7: Commit and open a PR
 
 Crossplane projects require a [DCO](https://developercertificate.org/) sign-off
 on every commit. That's the `-s`:
@@ -209,7 +247,7 @@ on every commit. That's the `-s`:
 ```shell
 git switch -c pr-ready
 git add -A
-git commit -s -m "feat: add lifecycle modes per XR"
+git commit -s -m "feat: add lifecycle modes per XR, in Compositions and Operations"
 ```
 
 `main` still holds only the scaffold from Lab 1, so your branch carries the
@@ -261,7 +299,9 @@ Fill in the PR template. "Fixes #N" links the issue.
 
 ## ✅ Done when
 
-You have a PR URL, and its CI is green or running.
+- The Operation render patches `checkout` and `payments`, and leaves `sandbox`
+  alone
+- You have a PR URL, and its CI is green or running
 
 When you're done for the day, stop both functions: `Ctrl-C` in terminals 1
 and 3.
@@ -275,7 +315,7 @@ git fetch https://github.com/upbound/function-lifecycle workshop/lab-05 && git r
 ```
 
 This replaces your files with the end of Lab 5 and leaves `main` at your
-scaffold commit. Then do Step 4 as written.
+scaffold commit. Then do Step 7 as written.
 
 **Next:** [Lab 6 (take-home): See it on a cluster](06-e2e-stretch.md), and the
 [curated issues](../CURATED-ISSUES.md).

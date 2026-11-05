@@ -187,4 +187,4 @@ git fetch https://github.com/upbound/function-lifecycle workshop/lab-04 && git r
 This replaces your files with the end of Lab 4 and leaves your commits as
 they are.
 
-**Next:** [Lab 5: PR-ready](05-pr-ready.md)
+**Next:** [Lab 5: Operations and the PR](05-pr-ready.md)

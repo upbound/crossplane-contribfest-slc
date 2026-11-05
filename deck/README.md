@@ -15,8 +15,8 @@ slide has speaker notes.
 | 0:25 | lab2 | Lab 2, 15 min |
 | 0:40 | lab3 | Lab 3, 10 min |
 | 0:50 | lab4, debug-toolkit | Lab 4, 8 min. Elastic: demo it from the front if the room is behind. |
-| 0:58 | lab5, pr-checklist, ai-policy | Lab 5, 10 min, then PRs |
-| 1:08 | demo | Live demo on kind: the finished function on a real cluster (`demo/setup.sh` run beforehand). This is the buffer: if the labs ran long, play the video or skip it, and start the journey at 1:13. |
+| 0:58 | lab5, pr-checklist, ai-policy | Lab 5, 12 min: the Operation, then PRs |
+| 1:10 | demo | Live demo on kind: the finished function on a real cluster (`demo/setup.sh` run beforehand). This is the buffer: if the labs ran long, play the video or skip it, and start the journey at 1:13. |
 | 1:13 | polyglot … thanks | The journey to maintainer, curated issues, feedback, group photo |
 
 ## Before Nov 11
