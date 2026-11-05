@@ -64,7 +64,8 @@ Object, and a plain ConfigMap. Step `lifecycle` is yours.
 
 `example/functions.yaml` runs both functions locally: yours on port 9443,
 function-patch-and-transform on 9444. Open a **third terminal** and start
-function-patch-and-transform, which `setup.sh` installed:
+function-patch-and-transform. `setup.sh` built it into `~/.local/bin`, next to
+`crossplane-core`:
 
 ```shell
 cd ~/function-lifecycle
@@ -72,6 +73,9 @@ function-patch-and-transform --insecure --address=127.0.0.1:9444
 ```
 
 It prints nothing, and that's fine. Leave it running until the end of Lab 4.
+If the shell says `command not found`, `~/.local/bin` isn't on this
+terminal's `PATH`: see the first row of
+[HELPERS](../HELPERS.md#common-problems).
 
 ## Step 2: Map modes to policies
 
