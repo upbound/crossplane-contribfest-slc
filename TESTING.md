@@ -39,7 +39,7 @@ These can't be checked without you:
 - Anything that needs GitHub: catch-up from the real URL, Lab 5 PRs and CI,
   and setup warming the function-lifecycle modules.
 - A newcomer's pace against the time boxes.
-- Lab 6 by a first-time attendee, and the demo rehearsal.
+- Lab 6 by a first-time attendee, and `setup.sh --e2e` on Docker Desktop and on Linux.
 - How the deck renders on the venue projector.
 - Conference-like network conditions.
 
@@ -116,6 +116,7 @@ lab pages, not this file. Record times against the time boxes.
 | 3. Generalize | 10 min | | | |
 | 4. Debug | 8 min | | | |
 | 5. Operations and the PR | 12 min | | | |
+| 6. Local e2e | 8 min | | | |
 
 Things to watch:
 
@@ -180,18 +181,21 @@ recognize the message and know the fix works:
       Does clicking Deny still let render connect? Update the HELPERS row
       with what you find.
 
-## 6. Demo and Lab 6 on kind (presenter laptop)
+## 6. Lab 6 on kind
 
 Checked on 2026-11-05 on an arm64 Mac with Colima (no buildx), from the
-function repo's `main`: `./e2e/run.sh` passes all six checks. A warm rerun
-takes about 20 seconds. Without the `operation` capability, it fails with
-`missing required capabilities: operation`.
+function repo's `workshop/lab-06`: `./e2e/run.sh` passes all six checks. On a
+warm cluster it takes about 30 seconds. Without the `operation` capability, it
+fails in about 30 seconds with `missing required capabilities: operation`. A
+new cluster took 1:44 with the images already pulled. Pulling them adds a few
+minutes.
 
-- [ ] Lab 6 as written, from a fresh attendee repo after Lab 5, against the
-      real `workshop/lab-06` tag. Time the first run.
-- [ ] The demo: a warm `./e2e/run.sh`, then the dropped-capability run. Keep
-      the failing output in a second terminal in case the retries run long.
-- [ ] Record the demo video as the Wi-Fi fallback.
+- [ ] `./scripts/setup.sh --e2e` on a laptop that has never pulled the images.
+      Time it.
+- [ ] Lab 6 as written, from a fresh attendee repo after Lab 5, on the warm
+      cluster. It should fit in 8 minutes, including `gh pr ready`.
+- [ ] The fallback: run Lab 6 from the front on the presenter laptop.
+- [ ] Record it as the Wi-Fi fallback.
 
 ## 7. Deck
 

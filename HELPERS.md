@@ -12,6 +12,8 @@ fast.
   debug their code while the room moves on. Offer to look at it afterwards.
 - From Lab 5 on, help fast finishers pick a `contribfest` issue and get a PR
   open. Review it on the spot if you can.
+- Lab 6 is elastic. If the room is behind at 1:08, the presenter runs it from
+  the front, and people finish it at home.
 
 ## Catch-up
 
@@ -50,6 +52,10 @@ Everyone runs the labs on their own laptop with `./scripts/setup.sh`: Go, the
 crossplane CLI, Crossplane itself as the render engine, and
 function-patch-and-transform as a local process. Nobody needs Docker until
 Lab 6.
+
+- `./scripts/setup.sh --e2e` also creates Lab 6's `lifecycle-e2e` kind cluster,
+  so Lab 6 doesn't pull images on the conference Wi-Fi. Without Docker, pair
+  people up for Lab 6.
 
 - `./scripts/setup.sh --check` checks a laptop without installing anything,
   and ends with a render smoke test.

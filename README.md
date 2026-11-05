@@ -12,8 +12,9 @@ cd crossplane-contribfest-slc
 ```
 
 It takes about five minutes, needs no Docker, and ends with **You're ready for
-the labs.** Details, and what to do without a laptop:
-[PREREQUISITES.md](PREREQUISITES.md).
+the labs.** If you have Docker, kind, kubectl, and helm, run
+`./scripts/setup.sh --e2e` instead: it also creates the cluster for Lab 6.
+Details, and what to do without a laptop: [PREREQUISITES.md](PREREQUISITES.md).
 
 ---
 
@@ -49,7 +50,7 @@ Today every composition patches them by hand.
 | [3. Generalize](labs/03-generalize-input.md) | Add an input API: the mode from the XR spec, status, or pipeline context | 10 min |
 | [4. Debug](labs/04-pipeline-debug.md) | Add results, conditions, and a render test harness, and look inside the pipeline | 8 min |
 | [5. Operations and the PR](labs/05-pr-ready.md) | Run the function as an Operation, `go fix`, DCO, and open the PR | 12 min |
-| [6. Local e2e](labs/06-e2e-stretch.md) *(take-home)* | Test your build on a kind cluster, then mark your PR ready | 20 min |
+| [6. Local e2e](labs/06-e2e-stretch.md) | Test your build on a kind cluster, then mark your PR ready | 8 min |
 
 Fell behind? Every lab ends at a tag. From `~/function-lifecycle`, jump to it with:
 

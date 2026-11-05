@@ -10,20 +10,20 @@ slide has speaker notes.
 | Time | Slides | Segment |
 |---|---|---|
 | 0:00 | cover, start, agenda | Welcome. Everyone runs `./scripts/setup.sh` (or `--check` if they did it beforehand). Pair up anyone it fails for. |
-| 0:05 | why-functions … before-after | Why functions, the ecosystem, management policies, the design |
-| 0:17 | lab1 | Lab 1, 8 min |
-| 0:25 | lab2 | Lab 2, 15 min |
-| 0:40 | lab3 | Lab 3, 10 min |
-| 0:50 | lab4, debug-toolkit | Lab 4, 8 min. Elastic: demo it from the front if the room is behind. |
-| 0:58 | lab5, pr-checklist, ai-policy | Lab 5, 12 min: the Operation, then PRs |
-| 1:10 | demo | Live demo: function-lifecycle's `./e2e/run.sh` on a warm kind cluster (run it once beforehand), then the same test catching a dropped `operation` capability that render misses. This is the buffer: if the labs ran long, play the video or skip it, and start the journey at 1:13. |
-| 1:13 | polyglot … thanks | The journey to maintainer, curated issues, feedback, group photo |
+| 0:05 | why-functions … before-after | Why functions, the ecosystem, management policies, the design. 10 min: keep it moving. |
+| 0:15 | lab1 | Lab 1, 8 min |
+| 0:23 | lab2 | Lab 2, 15 min |
+| 0:38 | lab3 | Lab 3, 10 min |
+| 0:48 | lab4, debug-toolkit | Lab 4, 8 min. Elastic: demo it from the front if the room is behind. |
+| 0:56 | lab5, pr-checklist, ai-policy | Lab 5, 12 min: the Operation, then draft PRs |
+| 1:08 | lab6 | Lab 6, 8 min: `./e2e/run.sh` on the cluster `setup.sh --e2e` made, the dropped-capability failure, then `gh pr ready`. Elastic: if the room is behind, run it from the front on your warm cluster, and people finish at home. |
+| 1:16 | polyglot … thanks | The journey to maintainer, curated issues, feedback, group photo. 4 min. |
 
 ## Before Nov 11
 
-- [ ] Post the setup instructions (PREREQUISITES.md) on sched and in Crossplane Slack a week ahead
+- [ ] Post the setup instructions (PREREQUISITES.md) on sched and in Crossplane Slack a week ahead. Ask people with Docker to run `./scripts/setup.sh --e2e`.
 - [x] QR code on the `start` slide (hub repo; decoded and checked on 2026-11-03)
 - [ ] QR code on the `thanks` slide (session feedback): needs the sched link
 - [x] Crossplane logo on the cover (white horizontal logo from cncf/artwork)
-- [ ] Record the demo as a Wi-Fi fallback
+- [ ] Record Lab 6 from the front as a Wi-Fi fallback
 - [ ] Names of the table helpers for the cover's speaker notes

@@ -1,9 +1,10 @@
-# Lab 6 (take-home): Local e2e, then mark the PR ready
+# Lab 6: Local e2e, then mark the PR ready
 
 **Objective**: Test your function on a real control plane on your laptop. Then
 tick the e2e box in your draft PR and mark it ready for review.
 
-⏱ **20 minutes**, most of it pulling images on the first run
+⏱ **8 minutes**, on the cluster `./scripts/setup.sh --e2e` created before the
+session
 
 ---
 
@@ -17,8 +18,15 @@ tick the e2e box in your draft PR and mark it ready for review.
 ## 📋 Prerequisites
 
 - [ ] Completed Lab 5, with a draft PR
-- [ ] Docker, kind, kubectl, and helm. `setup.sh` doesn't install these.
+- [ ] Docker running, plus kind, kubectl, and helm. `setup.sh` doesn't install
+  these.
+- [ ] The `lifecycle-e2e` cluster from `./scripts/setup.sh --e2e`. Without it,
+  the first run pulls about 1.5 GB of images, which conference Wi-Fi won't
+  finish in time.
 - [ ] About 4 GB of free memory for Docker
+
+No Docker? Pair up with a neighbor, or follow along on the projector. If the
+room runs late, this lab runs from the front, and you finish it at home.
 
 ## Why e2e
 
@@ -54,7 +62,8 @@ holds the App XRD, a Composition that wraps a ConfigMap in a provider-kubernetes
 ./e2e/run.sh
 ```
 
-It creates a kind cluster called `lifecycle-e2e`, with:
+It uses the kind cluster called `lifecycle-e2e`, and creates it if it's
+missing. The cluster has:
 
 - Crossplane 2.4.3, started with `--enable-operations`
 - provider-kubernetes, function-patch-and-transform, and function-auto-ready
@@ -77,8 +86,8 @@ PASS  the other App keeps Full
 All e2e checks passed.
 ```
 
-The first run takes about 5 minutes. Later runs reuse the cluster, rebuild only
-your function, and take under a minute.
+On the warm cluster it rebuilds only your function and takes under a minute.
+Without the warm-up, the first run takes about 5 minutes.
 
 ## Step 3: Watch it catch what render can't
 
@@ -90,19 +99,19 @@ render never reads the package metadata. Run the e2e test again:
 ./e2e/run.sh
 ```
 
-It takes about a minute this time, because Crossplane retries the Operation
-five times before it gives up:
+The e2e Operation sets `retryLimit: 1`, so Crossplane gives up after the first
+failure, about half a minute in:
 
 ```text
 FAIL  the Operation succeeds
-      Succeeded: failure limit of 5 reached
+      Succeeded: failure limit of 1 reached
       ValidPipeline: function capability check failed: function "function-lifecycle" (active revision "…") is missing required capabilities: operation
 ```
 
 Your function would have shipped like that, and every Operation that uses it
 would fail. Put the line back, run `./e2e/run.sh` again, and it passes.
 
-## Step 4: Look around (optional)
+## Step 4 (if you have time): Look around
 
 The cluster stays up after the test:
 
@@ -137,7 +146,7 @@ gh pr ready
 CI runs on the new commit. Your PR now carries an e2e test, and anyone can
 run it with one command.
 
-## Clean up
+## Clean up, after the session
 
 ```shell
 kind delete cluster --name lifecycle-e2e

@@ -1,7 +1,9 @@
 # Before the session
 
-Everything runs on your laptop, with no Docker and no cluster. Setup takes
-about five minutes. Please do it **before** the session, so the room doesn't
+Labs 1–5 run on your laptop with no Docker and no cluster. Lab 6 runs a small
+kind cluster, so if you have Docker, set that up before the session too
+([step 3](#3-for-lab-6-create-the-cluster-needs-docker)). Setup takes about five
+minutes. Please do it **before** the session, so the room doesn't
 download 250 MB each over the conference Wi-Fi at the same time.
 
 ## 1. Install Go and git
@@ -44,13 +46,29 @@ You're done when it prints **You're ready for the labs.**
 It downloads about 250 MB and uses about 3 GB of disk, mostly Go's build
 cache. To install somewhere else, run `BIN_DIR=/some/dir ./scripts/setup.sh`.
 
+## 3. For Lab 6: create the cluster (needs Docker)
+
+Lab 6 tests your function on a local kind cluster. With Docker running, and
+kind, kubectl, and helm installed, run:
+
+```shell
+./scripts/setup.sh --e2e
+```
+
+It does everything step 2 does, then runs the reference function's e2e test
+once. That pulls about 1.5 GB of images and leaves a kind cluster called
+`lifecycle-e2e` running, ready for Lab 6. It takes about 5 minutes, and points
+`kubectl` at the new cluster.
+
+No Docker? That's fine. Pair up for Lab 6, or follow it on the projector.
+
 ## Optional
 
 | Tool | Needed for |
 |---|---|
 | A GitHub account | Lab 5: opening a PR |
 | `gh`, logged in | Lab 5, from the terminal. The browser works too. |
-| Docker, kind, kubectl, helm | Lab 6 (take-home). Also building the package image yourself in Lab 5, though CI builds it for you either way. |
+| Docker, kind, kubectl, helm | Lab 6, see [step 3](#3-for-lab-6-create-the-cluster-needs-docker). Also building the package image yourself in Lab 5, though CI builds it for you either way. |
 
 ## No laptop, or setup failed?
 

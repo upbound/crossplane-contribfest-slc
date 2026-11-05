@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Installs what the labs need, without Docker, and checks that it works. Run it
 # before the session: the first run downloads about 250 MB, mostly Go modules,
-# and then the labs work offline.
+# and then Labs 1-5 work offline.
 #
 #   ./scripts/setup.sh           # install what's missing, warm the Go caches, smoke test
+#   ./scripts/setup.sh --e2e     # also create Lab 6's kind cluster, which needs Docker
 #   ./scripts/setup.sh --check   # check only, install nothing
 #
 # Tools go to $BIN_DIR (default ~/.local/bin). Nothing needs sudo.
@@ -18,7 +19,15 @@ FN_REPO=https://github.com/upbound/function-lifecycle
 SMOKE_PORT=19444
 
 CHECK_ONLY=0
-[ "${1:-}" = "--check" ] && CHECK_ONLY=1
+E2E=0
+for a in "$@"; do
+  case $a in
+    --check) CHECK_ONLY=1 ;;
+    --e2e) E2E=1 ;;
+    *) echo "Unknown option $a. Use --e2e, --check, or nothing."; exit 1 ;;
+  esac
+done
+E2E_CLUSTER=lifecycle-e2e
 
 ok=1
 if [ -t 1 ]; then g=$'\033[32m' r=$'\033[31m' y=$'\033[33m' n=$'\033[0m'; else g= r= y= n=; fi
@@ -264,14 +273,31 @@ else
   warn "gh missing or logged out: you can open your Lab 5 PR in the browser instead"
 fi
 
-# Lab 6 runs a real cluster. Labs 1-5 never use these.
-step "Only for Lab 6, the take-home cluster lab"
+# Lab 6 tests the function on a kind cluster. Labs 1-5 never use Docker.
+step "Lab 6: the e2e test on a kind cluster"
 missing=""
 for t in docker kind kubectl helm; do command -v $t >/dev/null || missing="$missing $t"; done
-if [ -z "$missing" ]; then
+if [ -n "$missing" ]; then
+  warn "not installed:$missing. Labs 1–5 don't need them. Without them, pair up for Lab 6."
+elif ! docker info >/dev/null 2>&1; then
+  warn "docker, kind, kubectl, helm are installed, but Docker isn't running"
+elif [ $E2E = 1 ] && [ $CHECK_ONLY = 0 ]; then
   pass "docker, kind, kubectl, helm"
+  # Lab 6's first run pulls about 1.5 GB of images. Do it now, not on conference
+  # Wi-Fi: run the reference function's e2e test once, and keep its cluster.
+  echo "    creating the $E2E_CLUSTER cluster and running the e2e test, about 5 minutes the first time…"
+  if git clone -q --depth 1 --branch workshop/lab-06 "$FN_REPO" "$tmp/e2e" 2>/dev/null &&
+    (cd "$tmp/e2e" && ./e2e/run.sh) >"$tmp/e2e.log" 2>&1; then
+    pass "the e2e test passes, and $E2E_CLUSTER is ready for Lab 6. kubectl now points at it."
+  else
+    tail -15 "$tmp/e2e.log"
+    fail "the e2e warm-up failed. Lab 6's page has fixes under Stuck?"
+  fi
+elif kind get clusters 2>/dev/null | grep -qx "$E2E_CLUSTER"; then
+  pass "docker, kind, kubectl, helm, and the $E2E_CLUSTER cluster for Lab 6"
 else
-  warn "not installed:$missing. Labs 1–5 don't need them."
+  pass "docker, kind, kubectl, helm"
+  warn "no $E2E_CLUSTER cluster yet. Run ./scripts/setup.sh --e2e before the session, so Lab 6 doesn't pull images on conference Wi-Fi."
 fi
 
 step "Your PATH"

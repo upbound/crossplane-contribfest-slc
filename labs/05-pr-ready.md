@@ -330,5 +330,4 @@ git fetch https://github.com/upbound/function-lifecycle workshop/lab-05 && git r
 This replaces your files with the end of Lab 5 and leaves `main` at your
 scaffold commit. Then do Step 7 as written.
 
-**Next:** [Lab 6 (take-home): Local e2e, then mark the PR ready](06-e2e-stretch.md),
-and the [curated issues](../CURATED-ISSUES.md).
+**Next:** [Lab 6: Local e2e, then mark the PR ready](06-e2e-stretch.md)
