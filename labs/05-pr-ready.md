@@ -263,8 +263,19 @@ gh pr create --web
 ```
 
 `--web` opens the pull request form in your browser, filled in with the
-repo's PR template. Work through its checklist, then create the PR. Watch CI
-run lint, tests, and a multi-arch package build on it.
+repo's PR template. Work through its checklist, and add one more line to it:
+
+```text
+- [ ] Ran the e2e test on a local cluster.
+```
+
+Then open it as a draft: use the arrow next to **Create pull request** and pick
+**Create draft pull request**. A draft tells maintainers it isn't ready for
+review yet. Unit tests and renders prove what your function returns. Only a
+real control plane proves that Crossplane and the provider act on it. That's
+[Lab 6](06-e2e-stretch.md): run the e2e test, tick the box, and mark the PR
+ready. Meanwhile, watch CI run lint, tests, and a multi-arch package build on
+your draft.
 
 > 💡 Pushing `main` also starts CI there. On a new repo, its `push` job
 > usually fails with a 403: it publishes the package to ghcr.io, and new repos
@@ -293,7 +304,9 @@ git push -u origin HEAD
 gh pr create --web
 ```
 
-Fill in the PR template. "Fixes #N" links the issue.
+Fill in the PR template. "Fixes #N" links the issue. The template also asks
+whether you ran the e2e test, `./e2e/run.sh`. If you haven't yet, open the PR
+as a draft.
 
 ---
 
@@ -301,7 +314,7 @@ Fill in the PR template. "Fixes #N" links the issue.
 
 - The Operation render patches `checkout` and `payments`, and leaves `sandbox`
   alone
-- You have a PR URL, and its CI is green or running
+- You have a draft PR URL, and its CI is green or running
 
 When you're done for the day, stop both functions: `Ctrl-C` in terminals 1
 and 3.
