@@ -11,12 +11,12 @@ slide has speaker notes.
 |---|---|---|
 | 0:00 | cover, start, agenda | Welcome. Everyone runs `./scripts/setup.sh` (or `--check` if they did it beforehand). Pair up anyone it fails for. |
 | 0:05 | why-functions … before-after | Why functions, the ecosystem, management policies, the design |
-| 0:17 | demo | Live demo on kind (`demo/setup.sh` run beforehand; video as a fallback) |
-| 0:22 | lab1 | Lab 1, 8 min |
-| 0:30 | lab2 | Lab 2, 15 min |
-| 0:45 | lab3 | Lab 3, 10 min |
-| 0:55 | lab4, debug-toolkit | Lab 4, 8 min. Elastic: demo it from the front if the room is behind. |
-| 1:03 | lab5, pr-checklist, ai-policy | Lab 5, 10 min, then PRs |
+| 0:17 | lab1 | Lab 1, 8 min |
+| 0:25 | lab2 | Lab 2, 15 min |
+| 0:40 | lab3 | Lab 3, 10 min |
+| 0:50 | lab4, debug-toolkit | Lab 4, 8 min. Elastic: demo it from the front if the room is behind. |
+| 0:58 | lab5, pr-checklist, ai-policy | Lab 5, 10 min, then PRs |
+| 1:08 | demo | Live demo on kind: the finished function on a real cluster (`demo/setup.sh` run beforehand). This is the buffer: if the labs ran long, play the video or skip it, and start the journey at 1:13. |
 | 1:13 | polyglot … thanks | The journey to maintainer, curated issues, feedback, group photo |
 
 ## Before Nov 11

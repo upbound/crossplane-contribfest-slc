@@ -189,8 +189,8 @@ recognize the message and know the fix works:
 - [ ] Scan the `start` QR code from the back of a room. Add the `thanks`
       feedback QR code once the sched link exists, and scan that too.
 - [ ] Export the PDF for sched.
-- [ ] Rehearse the talk segments with a timer. The target is about 17 minutes
-      before the labs.
+- [ ] Rehearse the talk segments with a timer. The target is about 12 minutes
+      of slides before Lab 1, and the demo after Lab 5 in under 5.
 
 ## 8. The day before (Nov 10)
 
