@@ -14,9 +14,9 @@ slide has speaker notes.
 | 0:15 | lab1 | Lab 1, 8 min |
 | 0:23 | lab2 | Lab 2, 15 min |
 | 0:38 | lab3 | Lab 3, 10 min |
-| 0:48 | lab4, debug-toolkit | Lab 4, 8 min. Elastic: demo it from the front if the room is behind. |
+| 0:48 | lab4, debug-toolkit | Lab 4, 8 min. Elastic: if the room is behind, demo it on the projector instead. |
 | 0:56 | pr-checklist, ai-policy, lab5 | What maintainers check in a PR, the AI policy, then Lab 5, 12 min: the Operation, then draft PRs |
-| 1:08 | lab6 | Lab 6, 8 min: `./e2e/run.sh` on the cluster `setup.sh --e2e` made, the dropped-capability failure, then `gh pr ready`. Elastic: if the room is behind, run it from the front on your warm cluster, and people finish at home. |
+| 1:08 | lab6 | Lab 6, 8 min: `./e2e/run.sh` on the cluster `setup.sh --e2e` made, the dropped-capability failure, then `gh pr ready`. Elastic: if the room is behind, run it on the projector from your warm cluster, and people finish at home. |
 | 1:16 | polyglot … thanks | The journey to maintainer, curated issues, feedback, group photo. 4 min. |
 
 ## Before Nov 11
@@ -25,5 +25,5 @@ slide has speaker notes.
 - [x] QR code on the `start` slide (hub repo; decoded and checked on 2026-11-03)
 - [ ] QR code on the `thanks` slide (session feedback): needs the sched link
 - [x] Crossplane logo on the cover (white horizontal logo from cncf/artwork)
-- [ ] Record Lab 6 from the front as a Wi-Fi fallback
+- [ ] Record Lab 6 on the presenter laptop as a Wi-Fi fallback
 - [ ] Names of the table helpers for the cover's speaker notes

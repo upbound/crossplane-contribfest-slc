@@ -12,8 +12,8 @@ fast.
   debug their code while the room moves on. Offer to look at it afterwards.
 - From Lab 5 on, help fast finishers pick a `contribfest` issue and get a PR
   open. Review it on the spot if you can.
-- Lab 6 is elastic. If the room is behind at 1:08, the presenter runs it from
-  the front, and people finish it at home.
+- Lab 6 is elastic. If the room is behind at 1:08, the presenter runs it on the
+  projector for everyone, and people finish it at home.
 
 ## Catch-up
 

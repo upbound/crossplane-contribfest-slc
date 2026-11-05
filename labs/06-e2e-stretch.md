@@ -25,8 +25,9 @@ session
   finish in time.
 - [ ] About 4 GB of free memory for Docker
 
-No Docker? Pair up with a neighbor, or follow along on the projector. If the
-room runs late, this lab runs from the front, and you finish it at home.
+No Docker? Pair up with a neighbor, or watch the presenter run it on the
+projector. If the session runs late, the presenter runs it on the projector for
+everyone, and you finish it at home.
 
 ## Why e2e
 

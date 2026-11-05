@@ -194,7 +194,7 @@ minutes.
       Time it.
 - [ ] Lab 6 as written, from a fresh attendee repo after Lab 5, on the warm
       cluster. It should fit in 8 minutes, including `gh pr ready`.
-- [ ] The fallback: run Lab 6 from the front on the presenter laptop.
+- [ ] The fallback: run Lab 6 on the projector from the presenter laptop.
 - [ ] Record it as the Wi-Fi fallback.
 
 ## 7. Deck
