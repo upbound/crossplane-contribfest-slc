@@ -21,10 +21,10 @@ evening, **L** needs a design discussion first.
 | 8 | **Expiry.** `lifecycle.fn.crossplane.io/expires-at` switches to Deprovision after the time. Set the response TTL so Crossplane calls back right at expiry. | M | Tests with an injected clock, before and after expiry, asserting the TTL |
 | 9 | **Change windows.** Outside a cron window, downgrade to `[Observe, Create]`. Requeue at the window boundary. Lab 5's CronOperation already freezes XRs on a schedule, from outside. A window in the input works without Operations, which are alpha. Weigh the two in the issue before you start. | M | Tests with an injected clock inside and outside a window |
 | 10 | **Real MR detection.** Replace the `spec.forProvider` heuristic by asking Crossplane for each kind's schema (`CAPABILITY_REQUIRED_SCHEMAS`, Crossplane v2.2+). Fall back to the heuristic on older Crossplane. | M | Tests with and without the capability advertised |
-| 11 | **e2e in CI.** Run `./e2e/run.sh` ([Lab 6](labs/06-e2e-stretch.md)) in a GitHub Actions job on kind, for every PR. | M | The job fails on a PR that drops the `operation` capability |
+| 11 | **e2e in CI.** Run `./e2e/cluster.sh` and `./e2e/run.sh` ([Lab 6](labs/06-e2e-stretch.md)) in a GitHub Actions job, for every PR. | M | The job fails on a PR that drops the `operation` capability |
 | 12 | **Operation output.** In an Operation, also return the mode and the XRs it changed with `response.SetOutput`, so they show in the Operation's `status.pipeline[].output`. | S | A `TestRunOperation` case that checks the response's `Output` |
 | 13 | **WatchOperation example.** Freeze an App as soon as someone labels it `incident: "true"`: a WatchOperation in `example/`, rendered with `crossplane operation render --watched-resource`. | S | A new `example/test.sh` check that renders it |
-| 12 | **Investigate a `Pause` mode (`[]`).** Does an empty list survive server-side apply, or does the CRD default `["*"]` come back? Write up what you find. | L | A comment with a reproduction on Crossplane 2.4 |
+| 14 | **Investigate a `Pause` mode (`[]`).** Does an empty list survive server-side apply, or does the CRD default `["*"]` come back? Write up what you find. | L | A comment with a reproduction on Crossplane 2.4 |
 
 ## Across the ecosystem
 
