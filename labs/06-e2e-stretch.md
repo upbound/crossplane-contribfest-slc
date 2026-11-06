@@ -1,7 +1,7 @@
-# Lab 6: Local e2e, then mark the PR ready
+# Lab 6: Local e2e, the last check before a PR
 
-**Objective**: Test your function on a real control plane on your laptop. Then
-tick the e2e box in your draft PR and mark it ready for review.
+**Objective**: Test your function on a real control plane on your laptop, and
+commit the test with it. Then your branch is PR-ready.
 
 ⏱ **8 minutes**, on the cluster `./scripts/setup.sh --e2e` created before the
 session
@@ -13,11 +13,11 @@ session
 - Know what an e2e test catches that unit tests and render can't
 - Install a function you built on a real control plane: image, package,
   registry, `Function`
-- Turn that into a test anyone can rerun, and mark the PR ready
+- Turn that into a test anyone can rerun, and commit it with your function
 
 ## 📋 Prerequisites
 
-- [ ] Completed Lab 5, with a draft PR
+- [ ] Completed Lab 5: your function is committed on the `pr-ready` branch
 - [ ] Docker running, plus kind, kubectl, and helm. `setup.sh` doesn't install
   these.
 - [ ] The `lifecycle-e2e` cluster from `./scripts/setup.sh --e2e`. Without it,
@@ -180,23 +180,18 @@ FAIL  the Operation succeeds
 Your function would have shipped like that, and every Operation that uses it
 would fail. Put the line back, run `./e2e/run.sh` again, and it passes.
 
-## Step 6: Commit the e2e test and mark the PR ready
+## Step 6: Commit the e2e test, PR-ready
 
 ```shell
 git add e2e/
 git commit -s -m "test: add a local e2e test on kind"
-git push
+git log --oneline main..pr-ready
 ```
 
-On GitHub, tick **Ran the e2e test on a local cluster** in your PR's
-description. Then mark it ready for review:
-
-```shell
-gh pr ready
-```
-
-CI runs on the new commit. Your PR now carries an e2e test, and anyone can
-run it with one command.
+Your branch is PR-ready: unit tests, lint, renders, and an e2e test anyone can
+rerun with `./e2e/cluster.sh` and `./e2e/run.sh`. Every commit is signed off.
+function-lifecycle's PR template asks whether you ran the e2e test, so when you
+open a PR upstream, you can tick that box.
 
 ## Step 7 (if you have time): Look around
 
@@ -227,7 +222,8 @@ docker rm -f lifecycle-e2e-registry
 ## ✅ Done when
 
 - `./e2e/run.sh` prints `All e2e checks passed.`
-- Your PR is ready for review, with the e2e box ticked
+- `git log --oneline main..pr-ready` shows two signed-off commits: your
+  function and its e2e test
 
 ## 🛟 Stuck?
 

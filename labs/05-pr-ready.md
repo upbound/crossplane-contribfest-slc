@@ -1,8 +1,8 @@
-# Lab 5: Operations and the PR
+# Lab 5: Operations, then PR-ready
 
 **Objective**: Run the same function as a step of an Operation, so one
-Operation can freeze a whole fleet of XRs. Then get it past lint and open a
-pull request.
+Operation can freeze a whole fleet of XRs. Then make it PR-ready: lint clean,
+documented, and committed with a sign-off.
 
 ⏱ **12 minutes**
 
@@ -15,7 +15,7 @@ pull request.
 - Read the resources an Operation requires, and return server-side apply
   patches
 - Render an Operation without a cluster
-- Run the lint CI runs, and open a signed-off PR
+- Run the lint CI runs, and get a branch PR-ready with a signed-off commit
 
 ## 📋 Prerequisites
 
@@ -23,7 +23,6 @@ pull request.
 - [ ] Your function running in terminal 1, and function-patch-and-transform in
   terminal 3 (Lab 2, Step 1)
 - [ ] A terminal in `~/function-lifecycle`. Every command in this lab runs there.
-- [ ] `gh auth status` shows you're logged in, or use the browser for the PR
 
 ## ✅ Verify Lab 4 Completion
 
@@ -225,88 +224,36 @@ Then delete two template leftovers:
 rm NOTES.txt init.sh
 ```
 
-## Step 6: Check the package builds (optional, needs Docker)
+## Step 6: Commit it, PR-ready
 
-CI builds the multi-arch runtime image and the package on every pull request,
-so you can skip this step. If you have Docker with BuildKit, build it locally:
+Check that no lab markers are left. This prints nothing:
 
 ```shell
-docker build . --tag=runtime
-crossplane xpkg build -f package --embed-runtime-image=runtime
+grep -rn 'TODO(lab-' --include='*.go' --include='*.yaml' .
 ```
 
-> **⚠️** If `docker build` fails on `RUN --mount` or an empty
-> `BUILDPLATFORM`, your Docker has no BuildKit (the `buildx` plugin). Skip
-> the step and let CI build it.
-
-## Step 7: Commit and open a PR
-
-Crossplane projects require a [DCO](https://developercertificate.org/) sign-off
-on every commit. That's the `-s`:
+If it finds a line, delete it. Then commit. Crossplane projects require a
+[DCO](https://developercertificate.org/) sign-off on every commit. That's the
+`-s`:
 
 ```shell
 git switch -c pr-ready
 git add -A
 git commit -s -m "feat: add lifecycle modes per XR, in Compositions and Operations"
+git log --oneline main..pr-ready
 ```
 
-`main` still holds only the scaffold from Lab 1, so your branch carries the
-whole function.
+`main` still holds only the scaffold from Lab 1, so `pr-ready` carries the
+whole function in one signed-off commit. That's what a maintainer would see in
+your pull request. Opening it is the easy part. First, [Lab 6](06-e2e-stretch.md)
+adds the check maintainers ask for next: an e2e test on a real control plane.
 
-**Path A: your own repo** (everyone)
-
-```shell
-git switch main
-gh repo create function-lifecycle-lab --public --source . --push
-git switch pr-ready && git push -u origin pr-ready
-gh pr create --web
-```
-
-`--web` opens the pull request form in your browser, filled in with the
-repo's PR template. Work through its checklist, and add one more line to it:
-
-```text
-- [ ] Ran the e2e test on a local cluster.
-```
-
-Then open it as a draft: use the arrow next to **Create pull request** and pick
-**Create draft pull request**. A draft tells maintainers it isn't ready for
-review yet. Unit tests and renders prove what your function returns. Only a
-real control plane proves that Crossplane and the provider act on it. That's
-[Lab 6](06-e2e-stretch.md): run the e2e test, tick the box, and mark the PR
-ready. Meanwhile, watch CI run lint, tests, and a multi-arch package build on
-your draft.
-
-> 💡 Pushing `main` also starts CI there. On a new repo, its `push` job
-> usually fails with a 403: it publishes the package to ghcr.io, and new repos
-> don't give workflows permission to write packages. Your PR doesn't run that
-> job, so ignore it.
-
-**Path B: upstream** (fast finishers). Pick an issue labelled `contribfest` on
-[upbound/function-lifecycle](https://github.com/upbound/function-lifecycle/issues?q=is%3Aissue+is%3Aopen+label%3Acontribfest)
-and comment that you're taking it. Then work in a fresh fork, next to your
-lab copy:
-
-```shell
-mkdir -p ~/upstream && cd ~/upstream
-gh repo fork upbound/function-lifecycle --clone && cd function-lifecycle
-git switch -c <issue-number>-short-name
-```
-
-Write the test first, then the code. If you change `example/`, stop the
-function in terminal 1, run the fork's instead, and run `./example/test.sh`.
-Then:
-
-```shell
-go test -v ./... && golangci-lint run ./...
-git add -A && git commit -s -m "feat: <what it does>"
-git push -u origin HEAD
-gh pr create --web
-```
-
-Fill in the PR template. "Fixes #N" links the issue. The template also asks
-whether you ran the e2e test, `./e2e/run.sh`. If you haven't yet, open the PR
-as a draft.
+**Done early?** Pick an issue labelled `contribfest` on
+[upbound/function-lifecycle](https://github.com/upbound/function-lifecycle/issues?q=is%3Aissue+is%3Aopen+label%3Acontribfest),
+and comment that you're taking it. Work in a fork, next to your lab copy. Write
+the test first, then the code, and get it to the same PR-ready state:
+`go test -v ./...` passes, `golangci-lint run ./...` is clean, and every commit
+is signed off.
 
 ---
 
@@ -314,7 +261,8 @@ as a draft.
 
 - The Operation render patches `checkout` and `payments`, and leaves `sandbox`
   alone
-- You have a draft PR URL, and its CI is green or running
+- `golangci-lint run ./...` reports `0 issues`, and `go test -v ./...` passes
+- `git log --oneline main..pr-ready` shows your signed-off commit
 
 When you're done for the day, stop both functions: `Ctrl-C` in terminals 1
 and 3.
@@ -328,6 +276,6 @@ git fetch https://github.com/upbound/function-lifecycle workshop/lab-05 && git r
 ```
 
 This replaces your files with the end of Lab 5 and leaves `main` at your
-scaffold commit. Then do Step 7 as written.
+scaffold commit. Then do Step 6 as written.
 
-**Next:** [Lab 6: Local e2e, then mark the PR ready](06-e2e-stretch.md)
+**Next:** [Lab 6: Local e2e, the last check before a PR](06-e2e-stretch.md)

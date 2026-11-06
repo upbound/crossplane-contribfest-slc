@@ -266,13 +266,6 @@ if [ $CHECK_ONLY = 0 ]; then
   fi
 fi
 
-step "Optional"
-if command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then
-  pass "gh, logged in (Lab 5)"
-else
-  warn "gh missing or logged out: you can open your Lab 5 PR in the browser instead"
-fi
-
 # Lab 6 tests the function on a kind cluster. Labs 1-5 never use Docker.
 step "Lab 6: the e2e test on a kind cluster"
 missing=""

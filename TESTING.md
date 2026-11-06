@@ -1,7 +1,7 @@
 # Manual test plan
 
 Goal: by **Nov 10**, show that someone with only Go and git can get from this
-repo to an open PR in 80 minutes, on macOS and Linux, with no Docker, and that
+repo to a PR-ready function in 80 minutes, on macOS and Linux, with no Docker, and that
 the session survives slow conference Wi-Fi.
 
 ## What's already verified, and what isn't
@@ -140,10 +140,8 @@ Things to watch:
 - [ ] **Lab 5**:
   - The Operation render patches `checkout` and `payments`, not `sandbox`.
   - golangci-lint reports 12 findings, then 0 after `go fix` and deleting `ptr`.
-  - Path A: `gh repo create` and `gh pr create` work, and CI starts. Note how
-    long the multi-arch build takes.
-- [ ] **Lab 5, Path B**: fork upstream, branch, PR against a real `contribfest`
-      issue, then close the PR.
+  - The `TODO(lab-` check prints nothing, and `git log --oneline
+    main..pr-ready` shows one signed-off commit.
 - [ ] Where did they hesitate or misread? Fix the page, not the person.
 
 ## 4. Catch-up from every lab
@@ -156,7 +154,7 @@ From a directory where the previous lab went wrong (leave a compile error in
 - [ ] `workshop/lab-02`, `lab-03`, `lab-04`, `lab-05`: after each, run
       `go test ./...` and that lab's done-when command. `git log` still shows
       only the scaffold commit.
-- [ ] After the `workshop/lab-05` catch-up, Lab 5 Step 7 commits the whole
+- [ ] After the `workshop/lab-05` catch-up, Lab 5 Step 6 commits the whole
       function on `pr-ready`.
 - [ ] Labs 2–5, Step 1 (`workshop/lab-0N-start`) on top of a clean previous
       tag: `grep -n 'TODO(lab-0N)'` finds the markers, and the page's
@@ -194,7 +192,7 @@ minutes.
 - [ ] `./scripts/setup.sh --e2e` on a laptop that has never pulled the images.
       Time it.
 - [ ] Lab 6 as written, from a fresh attendee repo after Lab 5, on the warm
-      cluster. It should fit in 8 minutes, including `gh pr ready`.
+      cluster. It should fit in 8 minutes, including the commit.
 - [ ] The fallback: run Lab 6 on the projector from the presenter laptop.
 - [ ] Record it as the Wi-Fi fallback.
 

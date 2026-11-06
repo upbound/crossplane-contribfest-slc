@@ -10,8 +10,8 @@ fast.
   solution** in Labs 2–5. It's the reference code, ready to paste.
 - If someone's more than one lab behind, use the **catch-up** command. Don't
   debug their code while the room moves on. Offer to look at it afterwards.
-- From Lab 5 on, help fast finishers pick a `contribfest` issue and get a PR
-  open. Review it on the spot if you can.
+- From Lab 5 on, help fast finishers pick a `contribfest` issue and get it
+  PR-ready. If they open the PR, review it on the spot.
 - Lab 6 is elastic. If the room is behind at 1:08, the presenter runs it on the
   projector for everyone, and people finish it at home.
 
@@ -32,8 +32,8 @@ it lists, so it's not a catch-up. If someone's earlier code is broken, catch up
 first, then do Step 1.
 
 `read-tree` replaces the files and keeps the branch where it is. Don't use
-`git reset --hard` here. It would move `main` to the tag, and Lab 5's PR would
-have nothing to commit. Restart the function afterwards.
+`git reset --hard` here. It would move `main` to the tag, and Lab 5's commit
+would be empty. Restart the function afterwards.
 
 | Starting lab | Fetch tag |
 |---|---|
@@ -80,10 +80,9 @@ Lab 6.
 | `test.sh`: `Nothing is listening on 127.0.0.1:9443` (or `:9444`) | Your function (9443) or function-patch-and-transform (9444) isn't running | Start it in terminal 1 or terminal 3, as in Lab 2, Step 1 |
 | `bind: address already in use` | An old copy of the function, or of function-patch-and-transform, still holds the port | `lsof -nP -iTCP:9443 -sTCP:LISTEN` shows what it is. `lsof -t -iTCP:9443 -sTCP:LISTEN \| xargs kill` stops it. Use `9444` for function-patch-and-transform. |
 | macOS asks whether to accept incoming network connections | The function was started without `--address=127.0.0.1:9443`, so it listens on every interface | Click Allow, or restart it with the flag as the labs show |
-| Lab 5: `nothing to commit, working tree clean` | A catch-up with `git reset --hard` moved `main` to a tag | On `main`: `git reset --soft $(git rev-list --max-parents=0 HEAD)`. That moves `main` back to the first commit, the scaffold, and keeps the files. Then Step 7 again. |
+| Lab 5: `nothing to commit, working tree clean` | A catch-up with `git reset --hard` moved `main` to a tag | On `main`: `git reset --soft $(git rev-list --max-parents=0 HEAD)`. That moves `main` back to the first commit, the scaffold, and keeps the files. Then Step 6 again. |
 | `no space left on device` | Go's build cache is about 2 GB | `go clean -cache` frees it. The next build is slower. |
 | Lab 5: the Operation render says `on 0 resources` | `-e example/apps.yaml` is missing, so the Operation's requirement matched nothing | Add `-e example/apps.yaml`. It stands in for the Apps in a cluster. |
-| Lab 5 `docker build` fails on `RUN --mount` or `BUILDPLATFORM` | Docker without BuildKit (the `buildx` plugin) | Skip it. CI builds the package. |
 | Lab 6: `kind create cluster` fails with `could not find a log line that matches "Reached target .*Multi-User System.*"` | Other kind clusters use up Docker's inotify limit | Delete clusters you don't need with `kind delete cluster --name <name>`, or raise the limit as kind's [known issues](https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files) page shows |
 | Lab 6: `There's no lifecycle-e2e cluster. Run ./e2e/cluster.sh first.` | The warm-up didn't run, or the cluster was deleted | `./e2e/cluster.sh` creates it. It pulls about 1.5 GB, so pair them up meanwhile |
 | Lab 6: `kubectl get` shows another cluster's resources, or none | `kubectl` points at a different cluster | `kind export kubeconfig --name lifecycle-e2e` |

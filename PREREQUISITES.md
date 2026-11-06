@@ -67,9 +67,8 @@ No Docker? That's fine. Pair up for Lab 6, or follow it on the projector.
 
 | Tool | Needed for |
 |---|---|
-| A GitHub account | Lab 5: opening a PR |
-| `gh`, logged in | Lab 5, from the terminal. The browser works too. |
-| Docker, kind, kubectl, helm | Lab 6, see [step 3](#3-for-lab-6-create-the-cluster-needs-docker). Also building the package image yourself in Lab 5, though CI builds it for you either way. |
+| A GitHub account | Contributing after the session. The labs don't open PRs. |
+| Docker, kind, kubectl, helm | Lab 6, see [step 3](#3-for-lab-6-create-the-cluster-needs-docker) |
 
 ## No laptop, or setup failed?
 
