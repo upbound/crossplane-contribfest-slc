@@ -4,7 +4,7 @@
 Operation can freeze a whole fleet of XRs. Then make it PR-ready: lint clean,
 documented, and committed with a sign-off.
 
-⏱ **12 minutes**
+⏱ **10 minutes**
 
 ---
 

@@ -49,8 +49,8 @@ Today every composition patches them by hand.
 | [2. Core logic](labs/02-core-logic.md) | Read the mode, set policies on composed MRs, and make the tests pass | 15 min |
 | [3. Generalize](labs/03-generalize-input.md) | Add an input API: the mode from the XR spec, status, or pipeline context | 10 min |
 | [4. Debug](labs/04-pipeline-debug.md) | Add results, conditions, and a render test harness, and look inside the pipeline | 8 min |
-| [5. Operations, then PR-ready](labs/05-pr-ready.md) | Run the function as an Operation, `go fix`, and a signed-off commit | 12 min |
-| [6. Local e2e](labs/06-e2e-stretch.md) | Test your build on a kind cluster, and commit the test: PR-ready | 8 min |
+| [5. Operations, then PR-ready](labs/05-pr-ready.md) | Run the function as an Operation, `go fix`, and a signed-off commit | 10 min |
+| [6. Local e2e](labs/06-e2e-stretch.md) | Test your build on a kind cluster, and commit the test: PR-ready | 10 min |
 
 Fell behind? Every lab ends at a tag. From `~/function-lifecycle`, jump to it with:
 

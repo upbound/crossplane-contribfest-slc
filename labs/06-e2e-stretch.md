@@ -3,7 +3,7 @@
 **Objective**: Test your function on a real control plane on your laptop, and
 commit the test with it. Then your branch is PR-ready.
 
-⏱ **8 minutes**, on the cluster `./scripts/setup.sh --e2e` created before the
+⏱ **10 minutes**, on the cluster `./scripts/setup.sh --e2e` created before the
 session
 
 ---
@@ -133,14 +133,87 @@ kubectl get functions.pkg.crossplane.io function-lifecycle
 After a few seconds, `HEALTHY` is `True`, and `PACKAGE` is the tag you just
 built.
 
-## Step 4: Run the e2e test
+## Step 4: Try the modes by hand
+
+The examples from Labs 2–4 are all one App, `my-app`, each with a different
+mode. This time they run on a real control plane. Create it with no mode set:
+
+```shell
+kubectl apply -f example/xr.yaml
+kubectl wait apps.example.crossplane.io my-app -n default --for condition=Ready --timeout 2m
+crossplane resource trace apps.example.crossplane.io my-app -n default
+```
+
+```text
+NAME                                         SYNCED   READY   STATUS
+App/my-app (default)                         True     True    Available
+├─ Object/my-app-b8788b47b034 (default)      True     True    Available
+└─ ConfigMap/my-app-1051dc8fe27f (default)   -        -
+```
+
+The `Object` is a managed resource, so your function set its policies. The
+plain ConfigMap isn't, so your function skipped it. See the policies, and the
+`LifecycleMode` condition from Lab 4:
+
+```shell
+kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
+kubectl get apps.example.crossplane.io my-app -n default -o jsonpath='{.status.conditions[?(@.type=="LifecycleMode")].message}{"\n"}'
+```
+
+`POLICIES` is `[*]`, and the condition says
+`Composed managed resources use managementPolicies [*] (mode from input mode)`.
+
+Freeze it with the annotation, then run the two commands above again:
+
+```shell
+kubectl apply -f example/xr-observe-only.yaml
+```
+
+Now the `Object` has `[Observe]`, and the condition says the mode came from
+the annotation. `example/xr-spec-mode.yaml` does the same through
+`spec.parameters.managementMode` and `modeRef`, if you want to try that too.
+
+Now a typo:
+
+```shell
+kubectl apply -f example/xr-invalid.yaml
+crossplane resource trace apps.example.crossplane.io my-app -n default
+```
+
+The App shows `SYNCED False` with `unknown mode "Orphan"`, and the `Object`
+keeps the policies it had. The function fails closed, on a real cluster too.
+
+Last, Provision, then delete the App:
+
+```shell
+kubectl apply -f example/xr-provision.yaml
+```
+
+Run the policies command until it shows `[Observe Create Update LateInitialize]`.
+Then:
+
+```shell
+kubectl delete apps.example.crossplane.io my-app -n default
+kubectl get configmap my-app-config -n default
+```
+
+The App is gone, and its ConfigMap is still there. That's the Lab 2 recipe:
+delete an XR, keep what it manages.
+
+> 💡 A change usually lands within seconds. If one takes up to a minute, look
+> at the App's `Responsive` condition. `WatchCircuitOpen` means Crossplane
+> slowed down reconciles of an XR that changed many times in a few seconds. It
+> catches up by itself.
+
+## Step 5: Run the e2e test
 
 ```shell
 ./e2e/run.sh
 ```
 
 It repeats Step 3 with a fresh tag, so it always tests your current code. Then
-it runs two scenarios and checks each result:
+it runs two scenarios like the ones you just tried by hand, and checks each
+result:
 
 ```text
 ==> Scenario 1: Provision, then delete the App. Its ConfigMap survives.
@@ -158,7 +231,7 @@ All e2e checks passed.
 
 It takes under a minute.
 
-## Step 5: Watch it catch what render can't
+## Step 6: Watch it catch what render can't
 
 Break the package. In `package/crossplane.yaml`, delete the `- operation` line
 under `capabilities`. Render the Operation as in Lab 5, and it still works:
@@ -180,7 +253,7 @@ FAIL  the Operation succeeds
 Your function would have shipped like that, and every Operation that uses it
 would fail. Put the line back, run `./e2e/run.sh` again, and it passes.
 
-## Step 6: Commit the e2e test, PR-ready
+## Step 7: Commit the e2e test, PR-ready
 
 ```shell
 git add e2e/
@@ -192,23 +265,6 @@ Your branch is PR-ready: unit tests, lint, renders, and an e2e test anyone can
 rerun with `./e2e/cluster.sh` and `./e2e/run.sh`. Every commit is signed off.
 function-lifecycle's PR template asks whether you ran the e2e test, so when you
 open a PR upstream, you can tick that box.
-
-## Step 7 (if you have time): Look around
-
-The cluster stays up after the test:
-
-```shell
-kubectl get apps.example.crossplane.io,managed -n default
-crossplane resource trace apps.example.crossplane.io frozen -n default
-kubectl get operations.ops.crossplane.io freeze-apps -o yaml
-```
-
-Freeze `free` by hand, and watch its `Object` change:
-
-```shell
-kubectl annotate apps.example.crossplane.io free -n default lifecycle.fn.crossplane.io/mode=ObserveOnly
-kubectl get objects.kubernetes.m.crossplane.io -n default -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
-```
 
 ## Clean up, after the session
 

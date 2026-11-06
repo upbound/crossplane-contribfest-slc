@@ -115,8 +115,8 @@ lab pages, not this file. Record times against the time boxes.
 | 2. Core logic | 15 min | | | |
 | 3. Generalize | 10 min | | | |
 | 4. Debug | 8 min | | | |
-| 5. Operations and the PR | 12 min | | | |
-| 6. Local e2e | 8 min | | | |
+| 5. Operations, then PR-ready | 10 min | | | |
+| 6. Local e2e | 10 min | | | |
 
 Things to watch:
 
@@ -192,7 +192,7 @@ minutes.
 - [ ] `./scripts/setup.sh --e2e` on a laptop that has never pulled the images.
       Time it.
 - [ ] Lab 6 as written, from a fresh attendee repo after Lab 5, on the warm
-      cluster. It should fit in 8 minutes, including the commit.
+      cluster. It should fit in 10 minutes, including Step 4 by hand and the commit.
 - [ ] The fallback: run Lab 6 on the projector from the presenter laptop.
 - [ ] Record it as the Wi-Fi fallback.
 
@@ -203,8 +203,8 @@ minutes.
 - [ ] Scan the `start` QR code from the back of a room. Add the `thanks`
       feedback QR code once the sched link exists, and scan that too.
 - [ ] Export the PDF for sched.
-- [ ] Rehearse the talk segments with a timer. The target is about 12 minutes
-      of slides before Lab 1, and the demo after Lab 5 in under 5.
+- [ ] Rehearse the talk segments with a timer. The target is 10 minutes of
+      slides before Lab 1, and 4 minutes for the closing after Lab 6.
 
 ## 8. The day before (Nov 10)
 
