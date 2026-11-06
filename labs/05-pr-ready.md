@@ -56,13 +56,14 @@ applies that mode on each XR's next reconcile.
 ```shell
 cd ~/function-lifecycle
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-05-start
-git checkout FETCH_HEAD -- fn.go operation.go operation_test.go
+git checkout FETCH_HEAD -- fn.go fn_test.go mode.go operation.go operation_test.go
 git checkout FETCH_HEAD -- example/ README.md package/crossplane.yaml
 ```
 
 The checkout adds `operation.go`, its tests in `operation_test.go`, and the
 Operation examples. It also brings the finished README and package metadata,
-and the finished Lab 4 code in `fn.go`. Your commits stay as they are.
+and the finished Lab 4 code: `fn.go`, with `fn_test.go` and `mode.go` to
+match it. Your commits stay as they are.
 
 Have a look at `example/operation.yaml`. Its input sets `mode: ObserveOnly`,
 and its `requirements` select every App labelled `freeze: "true"`.
