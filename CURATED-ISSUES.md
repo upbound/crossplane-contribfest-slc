@@ -6,25 +6,26 @@ prove it works. Write that test first.
 ## function-lifecycle
 
 These are filed on [upbound/function-lifecycle](https://github.com/upbound/function-lifecycle/issues?q=is%3Aissue+is%3Aopen+label%3Acontribfest)
-with the `contribfest` label. Size: **S** fits in the session, **M** is an
+with the `contribfest` label. Start with the pinned [#16](https://github.com/upbound/function-lifecycle/issues/16): how to
+take an issue, and what PR-ready means there. Size: **S** fits in the session, **M** is an
 evening, **L** needs a design discussion first.
 
-| # | Issue | Size | Done when |
+| Issue | What | Size | Done when |
 |---|---|---|---|
-| 1 | **Raw `policies` escape hatch.** Accept `policies: [Observe, Create]` in the input for sets no mode covers. Reject sets crossplane-runtime doesn't support. | S | Table tests for a supported set, an unsupported set (fatal), and `policies` with `mode` (decide and document precedence) |
-| 2 | **`respectExisting`.** Don't overwrite `spec.managementPolicies` that an earlier step set on purpose. | S | A test where the bucket arrives with `["Observe"]` and keeps it |
-| 3 | **Propagate to nested XRs.** Copy the mode annotation onto composed XRs, so a whole tree follows one switch. | S | A test where a composed XR gets the annotation and a ConfigMap doesn't |
-| 4 | **`debug: true`.** Write the per-resource decisions into the pipeline context under `lifecycle.fn.crossplane.io/decisions`. | S | A test asserting the context key; a render with `-c` shows it |
-| 5 | **EnvironmentConfig freeze example.** Add an example using function-environment-configs and an EnvironmentConfig with `managementMode: ObserveOnly`. | S | `./example/test.sh` gets a new PASS line |
-| 6 | **Most restrictive wins.** Accept a list of `modeRefs` and pick the most restrictive mode, so a platform freeze beats an XR's own choice. | M | Tests for each pair ordering; README explains the ranking |
-| 7 | **Per-resource rules.** Match composed resources by composition-resource-name glob or by kind, and give them their own mode. For example, never delete `backup-*`. | M | Tests for a glob match, a kind match, and no match |
-| 8 | **Expiry.** `lifecycle.fn.crossplane.io/expires-at` switches to Deprovision after the time. Set the response TTL so Crossplane calls back right at expiry. | M | Tests with an injected clock, before and after expiry, asserting the TTL |
-| 9 | **Change windows.** Outside a cron window, downgrade to `[Observe, Create]`. Requeue at the window boundary. Lab 5's CronOperation already freezes XRs on a schedule, from outside. A window in the input works without Operations, which are alpha. Weigh the two in the issue before you start. | M | Tests with an injected clock inside and outside a window |
-| 10 | **Real MR detection.** Replace the `spec.forProvider` heuristic by asking Crossplane for each kind's schema (`CAPABILITY_REQUIRED_SCHEMAS`, Crossplane v2.2+). Fall back to the heuristic on older Crossplane. | M | Tests with and without the capability advertised |
-| 11 | **e2e in CI.** Run `./e2e/cluster.sh` and `./e2e/run.sh` ([Lab 6](labs/06-e2e-stretch.md)) in a GitHub Actions job, for every PR. | M | The job fails on a PR that drops the `operation` capability |
-| 12 | **Operation output.** In an Operation, also return the mode and the XRs it changed with `response.SetOutput`, so they show in the Operation's `status.pipeline[].output`. | S | A `TestRunOperation` case that checks the response's `Output` |
-| 13 | **WatchOperation example.** Freeze an App as soon as someone labels it `incident: "true"`: a WatchOperation in `example/`, rendered with `crossplane operation render --watched-resource`. | S | A new `example/test.sh` check that renders it |
-| 14 | **Investigate a `Pause` mode (`[]`).** Does an empty list survive server-side apply, or does the CRD default `["*"]` come back? Write up what you find. | L | A comment with a reproduction on Crossplane 2.4 |
+| [#2](https://github.com/upbound/function-lifecycle/issues/2) | **Raw `policies` escape hatch.** Accept `policies: [Observe, Create]` in the input for sets no mode covers. Reject sets crossplane-runtime doesn't support. | S | Table tests for a supported set, an unsupported set (fatal), and `policies` with `mode` (decide and document precedence) |
+| [#3](https://github.com/upbound/function-lifecycle/issues/3) | **`respectExisting`.** Don't overwrite `spec.managementPolicies` that an earlier step set on purpose. | S | A test where the bucket arrives with `["Observe"]` and keeps it |
+| [#4](https://github.com/upbound/function-lifecycle/issues/4) | **Propagate to nested XRs.** Copy the mode annotation onto composed XRs, so a whole tree follows one switch. | S | A test where a composed XR gets the annotation and a ConfigMap doesn't |
+| [#5](https://github.com/upbound/function-lifecycle/issues/5) | **`debug: true`.** Write the per-resource decisions into the pipeline context under `lifecycle.fn.crossplane.io/decisions`. | S | A test asserting the context key; a render with `-c` shows it |
+| [#6](https://github.com/upbound/function-lifecycle/issues/6) | **EnvironmentConfig freeze example.** Add an example using function-environment-configs and an EnvironmentConfig with `managementMode: ObserveOnly`. | S | `./example/test.sh` gets a new PASS line |
+| [#7](https://github.com/upbound/function-lifecycle/issues/7) | **Most restrictive wins.** Accept a list of `modeRefs` and pick the most restrictive mode, so a platform freeze beats an XR's own choice. | M | Tests for each pair ordering; README explains the ranking |
+| [#8](https://github.com/upbound/function-lifecycle/issues/8) | **Per-resource rules.** Match composed resources by composition-resource-name glob or by kind, and give them their own mode. For example, never delete `backup-*`. | M | Tests for a glob match, a kind match, and no match |
+| [#9](https://github.com/upbound/function-lifecycle/issues/9) | **Expiry.** `lifecycle.fn.crossplane.io/expires-at` switches to Deprovision after the time. Set the response TTL so Crossplane calls back right at expiry. | M | Tests with an injected clock, before and after expiry, asserting the TTL |
+| [#10](https://github.com/upbound/function-lifecycle/issues/10) | **Change windows.** Outside a cron window, downgrade to `[Observe, Create]`. Requeue at the window boundary. Lab 5's CronOperation already freezes XRs on a schedule, from outside. A window in the input works without Operations, which are alpha. Weigh the two in the issue before you start. | M | Tests with an injected clock inside and outside a window |
+| [#11](https://github.com/upbound/function-lifecycle/issues/11) | **Real MR detection.** Replace the `spec.forProvider` heuristic by asking Crossplane for each kind's schema (`CAPABILITY_REQUIRED_SCHEMAS`, Crossplane v2.2+). Fall back to the heuristic on older Crossplane. | M | Tests with and without the capability advertised |
+| [#12](https://github.com/upbound/function-lifecycle/issues/12) | **e2e in CI.** Run `./e2e/cluster.sh` and `./e2e/run.sh` ([Lab 6](labs/06-e2e-stretch.md)) in a GitHub Actions job, for every PR. | M | The job fails on a PR that drops the `operation` capability |
+| [#13](https://github.com/upbound/function-lifecycle/issues/13) | **Operation output.** In an Operation, also return the mode and the XRs it changed with `response.SetOutput`, so they show in the Operation's `status.pipeline[].output`. | S | A `TestRunOperation` case that checks the response's `Output` |
+| [#14](https://github.com/upbound/function-lifecycle/issues/14) | **WatchOperation example.** Freeze an App as soon as someone labels it `incident: "true"`: a WatchOperation in `example/`, rendered with `crossplane operation render --watched-resource`. | S | A new `example/test.sh` check that renders it |
+| [#15](https://github.com/upbound/function-lifecycle/issues/15) | **Investigate a `Pause` mode (`[]`).** Does an empty list survive server-side apply, or does the CRD default `["*"]` come back? Write up what you find. | L | A comment with a reproduction on Crossplane 2.4 |
 
 ## Across the ecosystem
 

@@ -235,5 +235,6 @@ Docker's inotify limit. Delete the ones you don't need with
 
 More in [HELPERS](../HELPERS.md#common-problems).
 
-**Next:** [Curated issues](../CURATED-ISSUES.md). Number 11 runs this e2e test
+**Next:** [Curated issues](../CURATED-ISSUES.md).
+[#12](https://github.com/upbound/function-lifecycle/issues/12) runs this e2e test
 in CI.
