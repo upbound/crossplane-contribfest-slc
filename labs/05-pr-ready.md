@@ -165,8 +165,12 @@ cluster. In the output:
   resources`.
 
 `example/cronoperation.yaml` runs the same pipeline at 17:00 every Friday.
-Render it the same way, with `example/cronoperation.yaml` in place of
-`example/operation.yaml`.
+Render it too:
+
+```shell
+crossplane operation render example/cronoperation.yaml example/functions.yaml \
+  -e example/apps.yaml -r --crossplane-binary=$(which crossplane-core)
+```
 
 > 💡 Operations are alpha. On a cluster, start Crossplane with
 > `--enable-operations`.

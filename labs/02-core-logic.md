@@ -82,10 +82,11 @@ terminal's `PATH`: see the first row of
 > lsof -nP -iTCP:9444 -sTCP:LISTEN
 > ```
 >
-> Stop it, then start function-patch-and-transform again:
+> Stop it, and start function-patch-and-transform again:
 >
 > ```shell
 > lsof -t -iTCP:9444 -sTCP:LISTEN | xargs kill
+> function-patch-and-transform --insecure --address=127.0.0.1:9444
 > ```
 
 ## Step 2: Read `mode.go`

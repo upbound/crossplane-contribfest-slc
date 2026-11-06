@@ -129,10 +129,11 @@ crossplane composition render example/xr.yaml example/composition.yaml example/f
 > ```
 >
 > If `go run` fails with `bind: address already in use`, an old copy still
-> holds the port. Stop it, then `go run` again:
+> holds the port. Stop it, and start the function again:
 >
 > ```shell
 > lsof -t -iTCP:9443 -sTCP:LISTEN | xargs kill
+> go run . --insecure --debug --address=127.0.0.1:9443
 > ```
 
 ---

@@ -163,10 +163,17 @@ kubectl get apps.example.crossplane.io my-app -n default -o jsonpath='{.status.c
 `POLICIES` is `[*]`, and the condition says
 `Composed managed resources use managementPolicies [*] (mode from input mode)`.
 
-Freeze it with the annotation, then run the two commands above again:
+Freeze it with the annotation:
 
 ```shell
 kubectl apply -f example/xr-observe-only.yaml
+```
+
+After a few seconds, check the policies and the condition again:
+
+```shell
+kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
+kubectl get apps.example.crossplane.io my-app -n default -o jsonpath='{.status.conditions[?(@.type=="LifecycleMode")].message}{"\n"}'
 ```
 
 Now the `Object` has `[Observe]`, and the condition says the mode came from
@@ -178,10 +185,11 @@ Now a typo:
 ```shell
 kubectl apply -f example/xr-invalid.yaml
 crossplane resource trace apps.example.crossplane.io my-app -n default
+kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
 ```
 
 The App shows `SYNCED False` with `unknown mode "Orphan"`, and the `Object`
-keeps the policies it had. The function fails closed, on a real cluster too.
+keeps the policies it had, `[Observe]`. The function fails closed, on a real cluster too.
 
 Last, Provision, then delete the App:
 
@@ -189,8 +197,15 @@ Last, Provision, then delete the App:
 kubectl apply -f example/xr-provision.yaml
 ```
 
-Run the policies command until it shows `[Observe Create Update LateInitialize]`.
-Then:
+After a few seconds, check the policies again:
+
+```shell
+kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
+```
+
+`POLICIES` shows `[Observe Create Update LateInitialize]`. If it still shows
+`[Observe]`, wait a few seconds and run that command again. Then delete the
+App, and look for its ConfigMap:
 
 ```shell
 kubectl delete apps.example.crossplane.io my-app -n default
@@ -234,8 +249,16 @@ It takes under a minute.
 ## Step 6: Watch it catch what render can't
 
 Break the package. In `package/crossplane.yaml`, delete the `- operation` line
-under `capabilities`. Render the Operation as in Lab 5, and it still works:
-render never reads the package metadata. Run the e2e test again:
+under `capabilities`. Render the Operation as in Lab 5, with your function
+still running in terminal 1:
+
+```shell
+crossplane operation render example/operation.yaml example/functions.yaml \
+  -e example/apps.yaml -r --crossplane-binary=$(which crossplane-core)
+```
+
+It still works: render never reads the package metadata. Now run the e2e test
+again:
 
 ```shell
 ./e2e/run.sh
@@ -251,7 +274,12 @@ FAIL  the Operation succeeds
 ```
 
 Your function would have shipped like that, and every Operation that uses it
-would fail. Put the line back, run `./e2e/run.sh` again, and it passes.
+would fail. Put the `- operation` line back, and run the e2e test once more.
+It passes:
+
+```shell
+./e2e/run.sh
+```
 
 ## Step 7: Commit the e2e test, PR-ready
 
