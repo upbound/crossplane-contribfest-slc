@@ -215,6 +215,54 @@ kubectl get configmap my-app-config -n default
 The App is gone, and its ConfigMap is still there. That's the Lab 2 recipe:
 delete an XR, keep what it manages.
 
+Now the Operation from Lab 5, on the real cluster. Create the three Apps from
+`example/apps.yaml`. Two of them are labelled `freeze: "true"`:
+
+```shell
+kubectl apply -f example/apps.yaml
+kubectl wait apps.example.crossplane.io payments checkout sandbox -n default --for condition=Ready --timeout 2m
+```
+
+Run the freeze Operation. An Operation runs once, so delete any earlier run of
+it first:
+
+```shell
+kubectl delete operations.ops.crossplane.io freeze-apps --ignore-not-found
+kubectl apply -f example/operation.yaml
+```
+
+After a few seconds, check the Operation, the Apps it annotated, and the
+policies on their Objects:
+
+```shell
+kubectl get operations.ops.crossplane.io freeze-apps
+kubectl get apps.example.crossplane.io payments checkout sandbox -n default -o custom-columns='NAME:.metadata.name,MODE:.metadata.annotations.lifecycle\.fn\.crossplane\.io/mode'
+kubectl get objects.kubernetes.m.crossplane.io -n default -l 'crossplane.io/composite in (payments,checkout,sandbox)' -o custom-columns='APP:.metadata.labels.crossplane\.io/composite,POLICIES:.spec.managementPolicies'
+```
+
+```text
+NAME          SYNCED   SUCCEEDED   AGE
+freeze-apps   True     True        8s
+
+NAME       MODE
+payments   ObserveOnly
+checkout   ObserveOnly
+sandbox    <none>
+
+APP        POLICIES
+checkout   [Observe]
+payments   [Observe]
+sandbox    [*]
+```
+
+The Operation set the annotation on the two labelled Apps. Your composition
+step then turned it into `[Observe]` on their Objects, and `sandbox` stayed
+at Full. That's what Lab 5's render predicted, now on a real control plane.
+
+If an App still shows `[*]`, run the last command again in a few seconds. A
+brand-new App gets many updates at once, and Crossplane can hold its next
+reconcile back for up to a minute. The note below explains why.
+
 > 💡 A change usually lands within seconds. If one takes up to a minute, look
 > at the App's `Responsive` condition. `WatchCircuitOpen` means Crossplane
 > slowed down reconciles of an XR that changed many times in a few seconds. It
