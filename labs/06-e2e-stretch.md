@@ -215,7 +215,7 @@ kubectl get configmap my-app-config -n default
 The App is gone, and its ConfigMap is still there. That's the Lab 2 recipe:
 delete an XR, keep what it manages.
 
-Now the Operation from Lab 5, on the real cluster. Create the three Apps from
+Now the CronOperation from Lab 5. Create the three Apps from
 `example/apps.yaml`. Two of them are labelled `freeze: "true"`:
 
 ```shell
@@ -223,27 +223,52 @@ kubectl apply -f example/apps.yaml
 kubectl wait apps.example.crossplane.io payments checkout sandbox -n default --for condition=Ready --timeout 2m
 ```
 
-Run the freeze Operation. An Operation runs once, so delete any earlier run of
-it first:
+Create the CronOperation. It freezes those Apps at 17:00 every Friday:
 
 ```shell
-kubectl delete operations.ops.crossplane.io freeze-apps --ignore-not-found
-kubectl apply -f example/operation.yaml
+kubectl apply -f example/cronoperation.yaml
+kubectl get cronoperations.ops.crossplane.io
 ```
 
-After a few seconds, check the Operation, the Apps it annotated, and the
-policies on their Objects:
+Nobody wants to wait until Friday. Make it run every minute, and wait for its
+first run. That takes up to a minute:
 
 ```shell
-kubectl get operations.ops.crossplane.io freeze-apps
+kubectl patch cronoperations.ops.crossplane.io weekend-freeze --type merge -p '{"spec":{"schedule":"* * * * *"}}'
+kubectl wait cronoperations.ops.crossplane.io weekend-freeze --for=jsonpath='{.status.lastSuccessfulTime}' --timeout 2m
+```
+
+Each run is an Operation that the CronOperation creates, named after it and
+labelled with it:
+
+```shell
+kubectl get operations.ops.crossplane.io -l ops.crossplane.io/cronoperation=weekend-freeze
+```
+
+```text
+NAME                        SYNCED   SUCCEEDED   AGE
+weekend-freeze-1793965440   True     True        5s
+```
+
+See which Apps the first run changed:
+
+```shell
+kubectl get operations.ops.crossplane.io -l ops.crossplane.io/cronoperation=weekend-freeze -o jsonpath='{range .items[0].status.appliedResourceRefs[*]}{.kind}/{.name}{"\n"}{end}'
+```
+
+It lists `App/payments` and `App/checkout`. If the e2e test ran on this
+cluster before, it lists `App/frozen` too: an App the test leaves behind,
+labelled the same way.
+
+Now look at the Apps' mode annotation, and at the policies your composition
+step set on their Objects:
+
+```shell
 kubectl get apps.example.crossplane.io payments checkout sandbox -n default -o custom-columns='NAME:.metadata.name,MODE:.metadata.annotations.lifecycle\.fn\.crossplane\.io/mode'
 kubectl get objects.kubernetes.m.crossplane.io -n default -l 'crossplane.io/composite in (payments,checkout,sandbox)' -o custom-columns='APP:.metadata.labels.crossplane\.io/composite,POLICIES:.spec.managementPolicies'
 ```
 
 ```text
-NAME          SYNCED   SUCCEEDED   AGE
-freeze-apps   True     True        8s
-
 NAME       MODE
 payments   ObserveOnly
 checkout   ObserveOnly
@@ -255,13 +280,21 @@ payments   [Observe]
 sandbox    [*]
 ```
 
-The Operation set the annotation on the two labelled Apps. Your composition
-step then turned it into `[Observe]` on their Objects, and `sandbox` stayed
-at Full. That's what Lab 5's render predicted, now on a real control plane.
+The CronOperation's Operation set the annotation on the two labelled Apps.
+Your composition step turned it into `[Observe]` on their Objects, and
+`sandbox` stayed at Full. That's what Lab 5's render predicted, now on a real
+control plane, on a schedule.
 
 If an App still shows `[*]`, run the last command again in a few seconds. A
 brand-new App gets many updates at once, and Crossplane can hold its next
 reconcile back for up to a minute. The note below explains why.
+
+Then stop the schedule, or it creates a new Operation every minute. Deleting
+the CronOperation deletes its Operations too:
+
+```shell
+kubectl delete cronoperations.ops.crossplane.io weekend-freeze
+```
 
 > 💡 A change usually lands within seconds. If one takes up to a minute, look
 > at the App's `Responsive` condition. `WatchCircuitOpen` means Crossplane

@@ -16,7 +16,7 @@ slide has speaker notes.
 | 0:38 | lab3 | Lab 3, 10 min |
 | 0:48 | lab4 | Lab 4, 8 min. Elastic: if the room is behind, demo it on the projector instead. |
 | 0:56 | lab5 | Lab 5, 10 min: the Operation, then a PR-ready commit |
-| 1:06 | lab6 | Lab 6, 10 min: install the function by hand on the cluster `setup.sh --e2e` made, try the modes with `kubectl apply` and `crossplane resource trace`, then `./e2e/run.sh`, the dropped-capability failure, then commit the test: PR-ready. Elastic: if the room is behind, run it on the projector from your warm cluster, and people finish at home. |
+| 1:06 | lab6 | Lab 6, 10 min: install the function by hand on the cluster `setup.sh --e2e` made, try the modes with `kubectl apply` and `crossplane resource trace`, run the CronOperation every minute and look at the Operation it creates, then `./e2e/run.sh`, the dropped-capability failure, then commit the test: PR-ready. Elastic: if the room is behind, run it on the projector from your warm cluster, and people finish at home. |
 | 1:16 | pr-checklist … thanks | 4 min: what maintainers check, the AI policy, then the journey to maintainer, curated issues, feedback, group photo. Skim debug-toolkit and polyglot: the lab pages have both. |
 
 ## Before Nov 11
