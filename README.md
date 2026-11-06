@@ -66,7 +66,7 @@ wrong.
 
 - [**Curated issues**](CURATED-ISSUES.md) in function-lifecycle and across the
   function ecosystem
-- [Crossplane Slack](https://slack.crossplane.io), `#dev`
+- [Crossplane Slack](https://slack.crossplane.io)
 - [Community meetings](https://github.com/crossplane/crossplane#get-involved)
 - [Writing a composition function in Go](https://docs.crossplane.io/latest/guides/write-a-composition-function-in-go/)
 - How to contribute: [CONTRIBUTING.md](https://github.com/crossplane/crossplane/blob/main/CONTRIBUTING.md),
