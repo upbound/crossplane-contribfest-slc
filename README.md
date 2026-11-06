@@ -75,5 +75,8 @@ wrong.
 
 ## For helpers
 
-See [HELPERS.md](HELPERS.md). To test the materials before the event, see
-[TESTING.md](TESTING.md).
+See [HELPERS.md](HELPERS.md).
+
+## License
+
+[Apache 2.0](LICENSE).
