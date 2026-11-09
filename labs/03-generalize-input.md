@@ -204,8 +204,14 @@ go test -v ./...
 
 ## Step 5: Render from the spec and from the context
 
-Restart the function in terminal 1 (`Ctrl-C`, then
-`go run . --insecure --debug --address=127.0.0.1:9443`), then in terminal 2:
+> 🔁 **Terminal 1: restart your function** so it runs your new code. Press
+> `Ctrl-C`, then:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
+
+**Terminal 2:**
 
 ```shell
 crossplane composition render example/xr-spec-mode.yaml example/composition.yaml \
@@ -248,6 +254,13 @@ git fetch https://github.com/upbound/function-lifecycle workshop/lab-03 && git r
 ```
 
 This replaces your files with the end of Lab 3. It doesn't touch your git
-history, so there's nothing to commit first. Restart the function in terminal 1 afterwards.
+history, so there's nothing to commit first.
+
+> 🔁 **Terminal 1: restart your function** so it runs the new code. Press
+> `Ctrl-C`, then:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
 
 **Next:** [Lab 4: Real pipeline and debugging](04-pipeline-debug.md)

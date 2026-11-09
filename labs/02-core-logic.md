@@ -242,15 +242,15 @@ Read the failures: `-want` is the expected response, `+got` is yours.
 
 ## Step 6: Render the real pipeline
 
-Restart the function in terminal 1 so it runs your new code. Press `Ctrl-C`,
-then:
+> 🔁 **Terminal 1: restart your function** so it runs your new code. Press
+> `Ctrl-C`, then:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
 
-```shell
-go run . --insecure --debug --address=127.0.0.1:9443
-```
-
-Then in terminal 2, render the Provision example. Render calls both
-functions: function-patch-and-transform composes, then yours sets the policies.
+**Terminal 2:** render the Provision example. Render calls both functions:
+function-patch-and-transform composes, then yours sets the policies.
 
 ```shell
 crossplane composition render example/xr-provision.yaml example/composition.yaml \
@@ -290,6 +290,13 @@ git fetch https://github.com/upbound/function-lifecycle workshop/lab-02 && git r
 ```
 
 This replaces your files with the end of Lab 2. It doesn't touch your git
-history, so there's nothing to commit first. Restart the function in terminal 1 afterwards.
+history, so there's nothing to commit first.
+
+> 🔁 **Terminal 1: restart your function** so it runs the new code. Press
+> `Ctrl-C`, then:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
 
 **Next:** [Lab 3: Generalize with an input API](03-generalize-input.md)

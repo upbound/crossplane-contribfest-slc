@@ -145,9 +145,14 @@ go test -v ./...
 
 ## Step 3: Render the Operation
 
-Restart the function in terminal 1 (`Ctrl-C`, then
-`go run . --insecure --debug --address=127.0.0.1:9443`) so it runs your new
-code. Then in terminal 2:
+> 🔁 **Terminal 1: restart your function** so it runs your new code. Press
+> `Ctrl-C`, then:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
+
+**Terminal 2:**
 
 ```shell
 crossplane operation render example/operation.yaml example/functions.yaml \

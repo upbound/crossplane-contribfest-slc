@@ -126,9 +126,14 @@ go test -v ./...
 
 ## Step 4: Run the render tests
 
-Restart the function in terminal 1 (`Ctrl-C`, then
-`go run . --insecure --debug --address=127.0.0.1:9443`) so it runs your new
-code. Then in terminal 2:
+> 🔁 **Terminal 1: restart your function** so it runs your new code. Press
+> `Ctrl-C`, then:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
+
+**Terminal 2:**
 
 ```shell
 ./example/test.sh
@@ -184,6 +189,13 @@ git fetch https://github.com/upbound/function-lifecycle workshop/lab-04 && git r
 ```
 
 This replaces your files with the end of Lab 4. It doesn't touch your git
-history, so there's nothing to commit first. Restart the function in terminal 1 afterwards.
+history, so there's nothing to commit first.
+
+> 🔁 **Terminal 1: restart your function** so it runs the new code. Press
+> `Ctrl-C`, then:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
 
 **Next:** [Lab 5: Operations and the PR](05-pr-ready.md)
