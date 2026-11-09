@@ -18,7 +18,8 @@
 ## 📋 Prerequisites
 
 - [ ] Completed Lab 1
-- [ ] Both terminals in `~/function-lifecycle`. Every command in this lab runs there.
+- [ ] Terminals 1 and 2 from Lab 1, in `~/function-lifecycle`. Every command in
+  this lab runs there.
 
 ## ✅ Verify Lab 1 Completion
 
@@ -27,6 +28,16 @@ go test -v ./...
 ```
 
 It passes.
+
+## 🖥️ Your terminals
+
+From this lab on, you use three:
+
+| Terminal | Runs | |
+|---|---|---|
+| 1 | Your function, `go run . --insecure --debug --address=127.0.0.1:9443` | From Lab 1. Restart it after every code change. |
+| 2 | Your commands: tests and renders | Every command, unless the lab names another terminal |
+| 3 | function-patch-and-transform | **New.** You start it in Step 2, and it runs until the end of Lab 4. |
 
 ---
 
@@ -60,10 +71,15 @@ Have a look at `example/composition.yaml`. Step `compose` uses
 function-patch-and-transform to compose a Bucket, a provider-kubernetes
 Object, and a plain ConfigMap. Step `lifecycle` is yours.
 
+## Step 2: Start function-patch-and-transform in a third terminal
+
 `example/functions.yaml` runs both functions locally: yours on port 9443,
-function-patch-and-transform on 9444. Open a **third terminal** and start
-function-patch-and-transform. `setup.sh` built it into `~/.local/bin`, next to
-`crossplane-core`:
+function-patch-and-transform on 9444. Render needs both running.
+
+**Open a third terminal** and start function-patch-and-transform there.
+`setup.sh` built it into `~/.local/bin`, next to `crossplane-core`.
+
+**Terminal 3:**
 
 ```shell
 cd ~/function-lifecycle
@@ -89,13 +105,13 @@ terminal's `PATH`: see the first row of
 > function-patch-and-transform --insecure --address=127.0.0.1:9444
 > ```
 
-## Step 2: Read `mode.go`
+## Step 3: Read `mode.go`
 
 `mode.go` maps each mode to its policies, as in the table above. `Policies()`
 returns an error for a mode it doesn't know, so a typo can't fall back to
 `Full`. You call it in the next step.
 
-## Step 3: Fill in the `TODO`s
+## Step 4: Fill in the `TODO`s
 
 Open `fn.go`. `RunFunction` already gets the observed XR and the desired
 composed resources. Three markers show where your code goes. This lists them
@@ -216,7 +232,7 @@ func isManaged(dr *resource.DesiredComposed) bool {
 > **⚠️ Don't build a new desired state from scratch.** Earlier steps put
 > resources there. If you drop them, Crossplane deletes them.
 
-## Step 4: Make it green
+## Step 5: Make it green
 
 ```shell
 go test -v ./...
@@ -224,7 +240,7 @@ go test -v ./...
 
 Read the failures: `-want` is the expected response, `+got` is yours.
 
-## Step 5: Render the real pipeline
+## Step 6: Render the real pipeline
 
 Restart the function in terminal 1 so it runs your new code. Press `Ctrl-C`,
 then:

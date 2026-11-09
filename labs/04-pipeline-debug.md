@@ -19,7 +19,7 @@ pipeline.
 
 - [ ] Completed Lab 3
 - [ ] Your function running in terminal 1, and function-patch-and-transform in
-  terminal 3 (Lab 2, Step 1)
+  terminal 3 (Lab 2, Step 2)
 - [ ] All terminals in `~/function-lifecycle`. Every command in this lab runs there.
 
 ## ✅ Verify Lab 3 Completion

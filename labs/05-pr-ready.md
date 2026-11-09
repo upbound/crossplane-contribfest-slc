@@ -21,7 +21,7 @@ documented, and committed with a sign-off.
 
 - [ ] Completed Lab 4
 - [ ] Your function running in terminal 1, and function-patch-and-transform in
-  terminal 3 (Lab 2, Step 1)
+  terminal 3 (Lab 2, Step 2)
 - [ ] A terminal in `~/function-lifecycle`. Every command in this lab runs there.
 
 ## ✅ Verify Lab 4 Completion
