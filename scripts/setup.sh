@@ -150,27 +150,50 @@ else
   fi
 fi
 
-# Lab 5 runs the same linter CI does. A golangci-lint built with an older Go
-# than yours panics with "file requires newer Go version", so it must be built
-# with your Go or a newer one.
+# Lab 5 runs the same linter CI does, at the same minor version: 2.11 and 2.12
+# disagree about the lab's fn_test.go. It must also be built with your Go or a
+# newer one, or it panics with "file requires newer Go version".
 go_minor=$(go env GOVERSION | sed -E 's/^go([0-9]+\.[0-9]+).*/\1/')
+lint_minor=$(echo "${GOLANGCI_VERSION#v}" | cut -d. -f1,2)
+# lint_info BINARY prints a golangci-lint binary's version and the Go it was
+# built with, such as "2.12.0 1.26", or nothing.
+lint_info() {
+  "$1" version 2>/dev/null | sed -nE 's/.*version v?([0-9.]+) built with go([0-9]+\.[0-9]+).*/\1 \2/p'
+}
+# lint_ok BINARY succeeds if it's golangci-lint $lint_minor.x, built with
+# go$go_minor or newer.
+lint_ok() {
+  local v g
+  read -r v g <<<"$(lint_info "$1")"
+  [ "$(echo "$v" | cut -d. -f1,2)" = "$lint_minor" ] && [ -n "$g" ] && version_ge "$g" "$go_minor"
+}
 lint=$(PATH=$ORIG_PATH command -v golangci-lint || true)
-lint_info=$([ -n "$lint" ] && "$lint" version 2>/dev/null)
-lint_go=$(echo "$lint_info" | sed -nE 's/.*built with go([0-9]+\.[0-9]+).*/\1/p')
-if [[ $lint_info == *"version v2."* || $lint_info == *"version 2."* ]] && [ -n "$lint_go" ] && version_ge "$lint_go" "$go_minor"; then
-  short=$("$lint" version --short 2>/dev/null)
-  pass "golangci-lint v${short#v}, built with go$lint_go ($lint)"
-elif [ $CHECK_ONLY = 1 ]; then
-  fail "golangci-lint v2 built with go$go_minor or newer: run without --check to install it"
+if [ -n "$lint" ] && lint_ok "$lint"; then
+  read -r lv lg <<<"$(lint_info "$lint")"
+  pass "golangci-lint v$lv, built with go$lg ($lint)"
 else
-  echo "    building golangci-lint with your Go, a few minutes the first time…"
-  if GOBIN=$BIN_DIR go install "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$GOLANGCI_VERSION" >"$tmp/lint.log" 2>&1; then
-    pass "golangci-lint $GOLANGCI_VERSION, built with go$go_minor"
-    [ -n "$lint" ] && [ "$lint" != "$BIN_DIR/golangci-lint" ] &&
-      warn "the golangci-lint at $lint comes first on your PATH and was built with an older Go. Remove it, or put $BIN_DIR first."
+  have_lint=0
+  if [ -x "$BIN_DIR/golangci-lint" ] && lint_ok "$BIN_DIR/golangci-lint"; then
+    read -r lv lg <<<"$(lint_info "$BIN_DIR/golangci-lint")"
+    pass "golangci-lint v$lv, built with go$lg ($BIN_DIR/golangci-lint)"
+    have_lint=1
+  elif [ $CHECK_ONLY = 1 ]; then
+    fail "golangci-lint v$lint_minor.x built with go$go_minor or newer: run without --check to install it"
   else
-    tail -5 "$tmp/lint.log"
-    fail "couldn't build golangci-lint"
+    echo "    building golangci-lint with your Go, a few minutes the first time…"
+    if GOBIN=$BIN_DIR go install "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$GOLANGCI_VERSION" >"$tmp/lint.log" 2>&1; then
+      pass "golangci-lint $GOLANGCI_VERSION, built with go$go_minor"
+      have_lint=1
+    else
+      tail -5 "$tmp/lint.log"
+      fail "couldn't build golangci-lint"
+    fi
+  fi
+  # A new terminal puts $BIN_DIR first if setup adds it to PATH below. If it's
+  # on PATH already, behind another golangci-lint, Lab 5 would run that one.
+  if [ $have_lint = 1 ] && [ -n "$lint" ] && [ "$lint" != "$BIN_DIR/golangci-lint" ] && [ $path_ok = 1 ]; then
+    read -r lv lg <<<"$(lint_info "$lint")"
+    fail "your PATH finds another golangci-lint first: ${lv:+v$lv }at $lint. Lab 5 needs v$lint_minor.x. Remove that one, or put $BIN_DIR before it on your PATH."
   fi
 fi
 

@@ -177,11 +177,16 @@ crossplane operation render example/cronoperation.yaml example/functions.yaml \
 
 ## Step 4: Lint
 
-CI runs golangci-lint. Run the same version locally:
+CI runs golangci-lint 2.12. Check that you have the same version, then run it:
 
 ```shell
+golangci-lint --version
 golangci-lint run ./...
 ```
+
+The first line starts with `golangci-lint has version 2.12.0`. Another version
+reports different issues. Run `./scripts/setup.sh` in the hub repo again, and
+it tells you how to fix it.
 
 It finds 12 `modernize` issues, all in `fn_test.go`. Go 1.26 accepts
 `new("text")`, so the tests' `ptr("text")` helper isn't needed any more. One
