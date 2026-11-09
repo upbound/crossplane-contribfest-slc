@@ -5,6 +5,10 @@ fast.
 
 ## Your job
 
+- Before 11:00, as people sit down: the intro slide on the projector shows the
+  setup commands. Ask everyone to start `./scripts/setup.sh` right away, so
+  the downloads spread out as people arrive instead of all starting at 11:00.
+  If they ran it before, a rerun takes seconds.
 - Get everyone to a green `✅ Done when` before the mission card on screen moves on.
 - If someone's stuck on Go rather than on Crossplane, point them to **Show
   solution** in Labs 2–5. It's the reference code, ready to paste.

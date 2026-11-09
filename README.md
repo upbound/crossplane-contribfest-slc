@@ -12,7 +12,9 @@ cd crossplane-contribfest-slc
 ```
 
 It takes about five minutes, needs no Docker, and ends with **You're ready for
-the labs.** If you have Docker, kind, kubectl, and helm, run
+the labs.** Run it at your hotel, or as soon as you sit down: the first run
+downloads about 250 MB, and the whole room shares one Wi-Fi. A rerun takes
+seconds. If you have Docker, kind, kubectl, and helm, run
 `./scripts/setup.sh --e2e` instead: it also creates the cluster for Lab 6.
 Details, and what to do without a laptop: [PREREQUISITES.md](PREREQUISITES.md).
 
