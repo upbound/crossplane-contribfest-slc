@@ -60,7 +60,11 @@ Apps, and the freeze Operation.
 ## Step 2: Check the control plane
 
 `./scripts/setup.sh --e2e` created it before the session by running
-`./e2e/cluster.sh`. These are the commands it ran:
+`./e2e/cluster.sh`, so there's nothing to create here. What it ran is below,
+for reading only.
+
+<details>
+<summary>What <code>./e2e/cluster.sh</code> ran (read only, don't run these)</summary>
 
 ```shell
 kind create cluster --name lifecycle-e2e
@@ -80,7 +84,9 @@ kubectl apply -f e2e/manifests/composition.yaml -f e2e/manifests/providerconfig.
   the cluster. `functions.yaml` installs function-patch-and-transform and
   function-auto-ready. Your function comes next.
 
-Point `kubectl` at the cluster, and check it:
+</details>
+
+**Run these** to point `kubectl` at the cluster and check it:
 
 ```shell
 kind export kubeconfig --name lifecycle-e2e
@@ -133,13 +139,14 @@ kubectl get functions.pkg.crossplane.io function-lifecycle
 After a few seconds, `HEALTHY` is `True`, and `PACKAGE` is the tag you just
 built.
 
-## Step 4: Try the modes by hand
+## Step 4: See what only a cluster can show
 
-The examples from Labs 2–4 are all one App, `my-app`, each with a different
-mode. This time they run on a real control plane. Create it with no mode set:
+In Lab 2, render showed the Provision policies on the `Object`. Only a real
+control plane shows what they do. Create the App from Lab 2's Provision
+example:
 
 ```shell
-kubectl apply -f example/xr.yaml
+kubectl apply -f example/xr-provision.yaml
 kubectl wait apps.example.crossplane.io my-app -n default --for condition=Ready --timeout 2m
 crossplane resource trace apps.example.crossplane.io my-app -n default
 ```
@@ -152,154 +159,24 @@ App/my-app (default)                         True     True    Available
 ```
 
 The `Object` is a managed resource, so your function set its policies. The
-plain ConfigMap isn't, so your function skipped it. See the policies, and the
-`LifecycleMode` condition from Lab 4:
-
-```shell
-kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
-kubectl get apps.example.crossplane.io my-app -n default -o jsonpath='{.status.conditions[?(@.type=="LifecycleMode")].message}{"\n"}'
-```
-
-`POLICIES` is `[*]`, and the condition says
-`Composed managed resources use managementPolicies [*] (mode from input mode)`.
-
-Freeze it with the annotation:
-
-```shell
-kubectl apply -f example/xr-observe-only.yaml
-```
-
-After a few seconds, check the policies and the condition again:
-
-```shell
-kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
-kubectl get apps.example.crossplane.io my-app -n default -o jsonpath='{.status.conditions[?(@.type=="LifecycleMode")].message}{"\n"}'
-```
-
-Now the `Object` has `[Observe]`, and the condition says the mode came from
-the annotation. `example/xr-spec-mode.yaml` does the same through
-`spec.parameters.managementMode` and `modeRef`, if you want to try that too.
-
-Now a typo:
-
-```shell
-kubectl apply -f example/xr-invalid.yaml
-crossplane resource trace apps.example.crossplane.io my-app -n default
-kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
-```
-
-The App shows `SYNCED False` with `unknown mode "Orphan"`, and the `Object`
-keeps the policies it had, `[Observe]`. The function fails closed, on a real cluster too.
-
-Last, Provision, then delete the App:
-
-```shell
-kubectl apply -f example/xr-provision.yaml
-```
-
-After a few seconds, check the policies again:
+plain ConfigMap isn't, so your function skipped it. See the policies:
 
 ```shell
 kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
 ```
 
-`POLICIES` shows `[Observe Create Update LateInitialize]`. If it still shows
-`[Observe]`, wait a few seconds and run that command again. Then delete the
-App, and look for its ConfigMap:
+`POLICIES` shows `[Observe Create Update LateInitialize]`, with no `Delete`.
+The `Object` manages a ConfigMap of its own, `my-app-config`, through
+provider-kubernetes. Delete the App, and look for that ConfigMap:
 
 ```shell
 kubectl delete apps.example.crossplane.io my-app -n default
 kubectl get configmap my-app-config -n default
 ```
 
-The App is gone, and its ConfigMap is still there. That's the Lab 2 recipe:
-delete an XR, keep what it manages.
-
-Now the CronOperation from Lab 5. Create the three Apps from
-`example/apps.yaml`. Two of them are labelled `freeze: "true"`:
-
-```shell
-kubectl apply -f example/apps.yaml
-kubectl wait apps.example.crossplane.io payments checkout sandbox -n default --for condition=Ready --timeout 2m
-```
-
-Create the CronOperation. It freezes those Apps at 17:00 every Friday:
-
-```shell
-kubectl apply -f example/cronoperation.yaml
-kubectl get cronoperations.ops.crossplane.io
-```
-
-Nobody wants to wait until Friday. Make it run every minute, and wait for its
-first run. That takes up to a minute:
-
-```shell
-kubectl patch cronoperations.ops.crossplane.io weekend-freeze --type merge -p '{"spec":{"schedule":"* * * * *"}}'
-kubectl wait cronoperations.ops.crossplane.io weekend-freeze --for=jsonpath='{.status.lastSuccessfulTime}' --timeout 2m
-```
-
-Each run is an Operation that the CronOperation creates, named after it and
-labelled with it:
-
-```shell
-kubectl get operations.ops.crossplane.io -l ops.crossplane.io/cronoperation=weekend-freeze
-```
-
-```text
-NAME                        SYNCED   SUCCEEDED   AGE
-weekend-freeze-1793965440   True     True        5s
-```
-
-See which Apps the first run changed:
-
-```shell
-kubectl get operations.ops.crossplane.io -l ops.crossplane.io/cronoperation=weekend-freeze -o jsonpath='{range .items[0].status.appliedResourceRefs[*]}{.kind}/{.name}{"\n"}{end}'
-```
-
-It lists `App/payments` and `App/checkout`. If the e2e test ran on this
-cluster before, it lists `App/frozen` too: an App the test leaves behind,
-labelled the same way.
-
-Now look at the Apps' mode annotation, and at the policies your composition
-step set on their Objects:
-
-```shell
-kubectl get apps.example.crossplane.io payments checkout sandbox -n default -o custom-columns='NAME:.metadata.name,MODE:.metadata.annotations.lifecycle\.fn\.crossplane\.io/mode'
-kubectl get objects.kubernetes.m.crossplane.io -n default -l 'crossplane.io/composite in (payments,checkout,sandbox)' -o custom-columns='APP:.metadata.labels.crossplane\.io/composite,POLICIES:.spec.managementPolicies'
-```
-
-```text
-NAME       MODE
-payments   ObserveOnly
-checkout   ObserveOnly
-sandbox    <none>
-
-APP        POLICIES
-checkout   [Observe]
-payments   [Observe]
-sandbox    [*]
-```
-
-The CronOperation's Operation set the annotation on the two labelled Apps.
-Your composition step turned it into `[Observe]` on their Objects, and
-`sandbox` stayed at Full. That's what Lab 5's render predicted, now on a real
-control plane, on a schedule.
-
-If an App still shows `[*]`, run the last command again in a few seconds. A
-brand-new App gets many updates at once, and Crossplane can hold its next
-reconcile back for up to a minute. The note below explains why.
-
-Then stop the schedule, or it creates a new Operation every minute. Deleting
-the CronOperation deletes its Operations too:
-
-```shell
-kubectl delete cronoperations.ops.crossplane.io weekend-freeze
-```
-
-> 💡 A change usually lands within seconds. If one takes up to a minute, look
-> at the App's `Responsive` condition. `WatchCircuitOpen` means Crossplane
-> slowed down reconciles of an XR that changed many times in a few seconds. It
-> catches up by itself.
+The App is gone, and `my-app-config` is still there. That's the Provision
+recipe from Lab 2: delete an XR, keep what it manages. Render can't show you
+that, because it never runs a provider.
 
 ## Step 5: Run the e2e test
 
@@ -307,9 +184,11 @@ kubectl delete cronoperations.ops.crossplane.io weekend-freeze
 ./e2e/run.sh
 ```
 
-It repeats Step 3 with a fresh tag, so it always tests your current code. Then
-it runs two scenarios like the ones you just tried by hand, and checks each
-result:
+It does what you just did by hand, and checks each result. Open
+`e2e/run.sh`: nothing in it is hidden. Its first three steps are the three
+blocks of Step 3, with a fresh tag, so it always tests your current code.
+Scenario 1 is Step 4. Scenario 2 applies a one-off Operation like Lab 5's, and
+checks that it freezes only the App labelled `freeze: "true"`:
 
 ```text
 ==> Scenario 1: Provision, then delete the App. Its ConfigMap survives.
@@ -375,13 +254,6 @@ rerun with `./e2e/cluster.sh` and `./e2e/run.sh`. Every commit is signed off.
 function-lifecycle's PR template asks whether you ran the e2e test, so when you
 open a PR upstream, you can tick that box.
 
-## Clean up, after the session
-
-```shell
-kind delete cluster --name lifecycle-e2e
-docker rm -f lifecycle-e2e-registry
-```
-
 ---
 
 ## ✅ Done when
@@ -389,6 +261,169 @@ docker rm -f lifecycle-e2e-registry
 - `./e2e/run.sh` prints `All e2e checks passed.`
 - `git log --oneline main..pr-ready` shows two signed-off commits: your
   function and its e2e test
+
+## Explore more (if you finish early, or at home)
+
+The cluster stays up, so you can keep trying things on it. During the session,
+the presenter shows the CronOperation on the projector.
+
+### The other modes, by hand
+
+The examples from Labs 2–4 are all one App, `my-app`, each with a different
+mode. This time they run on a real control plane. Create it with no mode set:
+
+```shell
+kubectl apply -f example/xr.yaml
+kubectl wait apps.example.crossplane.io my-app -n default --for condition=Ready --timeout 2m
+crossplane resource trace apps.example.crossplane.io my-app -n default
+```
+
+```text
+NAME                                         SYNCED   READY   STATUS
+App/my-app (default)                         True     True    Available
+├─ Object/my-app-b8788b47b034 (default)      True     True    Available
+└─ ConfigMap/my-app-1051dc8fe27f (default)   -        -
+```
+
+The `Object` is a managed resource, so your function set its policies. The
+plain ConfigMap isn't, so your function skipped it. See the policies, and the
+`LifecycleMode` condition from Lab 4:
+
+```shell
+kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
+kubectl get apps.example.crossplane.io my-app -n default -o jsonpath='{.status.conditions[?(@.type=="LifecycleMode")].message}{"\n"}'
+```
+
+`POLICIES` is `[*]`, and the condition says
+`Composed managed resources use managementPolicies [*] (mode from input mode)`.
+
+Freeze it with the annotation:
+
+```shell
+kubectl apply -f example/xr-observe-only.yaml
+```
+
+After a few seconds, check the policies and the condition again:
+
+```shell
+kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
+kubectl get apps.example.crossplane.io my-app -n default -o jsonpath='{.status.conditions[?(@.type=="LifecycleMode")].message}{"\n"}'
+```
+
+Now the `Object` has `[Observe]`, and the condition says the mode came from
+the annotation. `example/xr-spec-mode.yaml` does the same through
+`spec.parameters.managementMode` and `modeRef`, if you want to try that too.
+
+Now a typo:
+
+```shell
+kubectl apply -f example/xr-invalid.yaml
+crossplane resource trace apps.example.crossplane.io my-app -n default
+kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
+```
+
+The App shows `SYNCED False` with `unknown mode "Orphan"`, and the `Object`
+keeps the policies it had, `[Observe]`. The function fails closed, on a real cluster too.
+
+Delete the App when you're done:
+
+```shell
+kubectl delete apps.example.crossplane.io my-app -n default
+```
+
+### The CronOperation, by hand
+
+Create the three Apps from `example/apps.yaml`. Two of them are labelled
+`freeze: "true"`:
+
+```shell
+kubectl apply -f example/apps.yaml
+kubectl wait apps.example.crossplane.io payments checkout sandbox -n default --for condition=Ready --timeout 2m
+```
+
+Create the CronOperation. It freezes those Apps at 17:00 every Friday:
+
+```shell
+kubectl apply -f example/cronoperation.yaml
+kubectl get cronoperations.ops.crossplane.io
+```
+
+Nobody wants to wait until Friday. Make it run every minute, and wait for its
+first run. That takes up to a minute:
+
+```shell
+kubectl patch cronoperations.ops.crossplane.io weekend-freeze --type merge -p '{"spec":{"schedule":"* * * * *"}}'
+kubectl wait cronoperations.ops.crossplane.io weekend-freeze --for=jsonpath='{.status.lastSuccessfulTime}' --timeout 2m
+```
+
+Each run is an Operation that the CronOperation creates, named after it and
+labelled with it:
+
+```shell
+kubectl get operations.ops.crossplane.io -l ops.crossplane.io/cronoperation=weekend-freeze
+```
+
+```text
+NAME                        SYNCED   SUCCEEDED   AGE
+weekend-freeze-1793965440   True     True        5s
+```
+
+See which Apps the first run changed:
+
+```shell
+kubectl get operations.ops.crossplane.io -l ops.crossplane.io/cronoperation=weekend-freeze -o jsonpath='{range .items[0].status.appliedResourceRefs[*]}{.kind}/{.name}{"\n"}{end}'
+```
+It lists `App/payments` and `App/checkout`, and also `App/frozen`: an App the
+e2e test leaves behind, with the same label.
+
+
+Now look at the Apps' mode annotation, and at the policies your composition
+step set on their Objects:
+
+```shell
+kubectl get apps.example.crossplane.io payments checkout sandbox -n default -o custom-columns='NAME:.metadata.name,MODE:.metadata.annotations.lifecycle\.fn\.crossplane\.io/mode'
+kubectl get objects.kubernetes.m.crossplane.io -n default -l 'crossplane.io/composite in (payments,checkout,sandbox)' -o custom-columns='APP:.metadata.labels.crossplane\.io/composite,POLICIES:.spec.managementPolicies'
+```
+
+```text
+NAME       MODE
+payments   ObserveOnly
+checkout   ObserveOnly
+sandbox    <none>
+
+APP        POLICIES
+checkout   [Observe]
+payments   [Observe]
+sandbox    [*]
+```
+
+The CronOperation's Operation set the annotation on the two labelled Apps.
+Your composition step turned it into `[Observe]` on their Objects, and
+`sandbox` stayed at Full. That's what Lab 5's render predicted, now on a real
+control plane, on a schedule.
+
+If an App still shows `[*]`, run the last command again in a few seconds. A
+brand-new App gets many updates at once, and Crossplane can hold its next
+reconcile back for up to a minute. The note below explains why.
+
+Then stop the schedule, or it creates a new Operation every minute. Deleting
+the CronOperation deletes its Operations too:
+
+```shell
+kubectl delete cronoperations.ops.crossplane.io weekend-freeze
+```
+
+> 💡 A change usually lands within seconds. If one takes up to a minute, look
+> at the App's `Responsive` condition. `WatchCircuitOpen` means Crossplane
+> slowed down reconciles of an XR that changed many times in a few seconds. It
+> catches up by itself.
+
+## Clean up, after the session
+
+```shell
+kind delete cluster --name lifecycle-e2e
+docker rm -f lifecycle-e2e-registry
+```
 
 ## 🛟 Stuck?
 
