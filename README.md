@@ -58,8 +58,8 @@ Fell behind? Every lab ends at a tag. From `~/function-lifecycle`, jump to it wi
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-0N && git read-tree -u --reset FETCH_HEAD
 ```
 
-It replaces your files with the end of that lab and leaves your commits
-alone. Lab 1's page has its own command, for when the scaffold itself went
+It replaces your files with the end of that lab, and doesn't touch your git
+history. Lab 1's page has its own command, for when the scaffold itself went
 wrong.
 
 ## Keep going

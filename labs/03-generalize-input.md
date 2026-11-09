@@ -65,7 +65,7 @@ git checkout FETCH_HEAD -- fn.go fn_test.go input/ example/
 
 Same repo as in Lab 2. The checkout replaces `fn.go` with the finished Lab 2
 code plus this lab's outline, and `input/` with the new input type. It also
-brings the new tests and examples. Your commits stay as they are.
+brings the new tests and examples.
 
 ## Step 2: Generate the input CRD
 
@@ -247,7 +247,7 @@ Jump to the finished Lab 3:
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-03 && git read-tree -u --reset FETCH_HEAD
 ```
 
-This replaces your files with the end of Lab 3 and leaves your commits as
-they are. Restart the function in terminal 1 afterwards.
+This replaces your files with the end of Lab 3. It doesn't touch your git
+history, so there's nothing to commit first. Restart the function in terminal 1 afterwards.
 
 **Next:** [Lab 4: Real pipeline and debugging](04-pipeline-debug.md)

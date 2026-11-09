@@ -90,6 +90,9 @@ git init -b main && git add -A && git commit -s -m "chore: scaffold"
 go test -v ./...
 ```
 
+That's your only commit until Lab 5. Labs 2–4 change files without
+committing, and Lab 5 commits the whole function at once.
+
 In **terminal 1**, run the function:
 
 ```shell

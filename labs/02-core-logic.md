@@ -64,8 +64,8 @@ git checkout FETCH_HEAD -- fn.go mode.go fn_test.go example/
 ```
 
 That's the repo you scaffolded in Lab 1. The checkout replaces `fn.go` with
-this lab's outline, and adds `mode.go`, the tests, and the examples. Your
-commits stay as they are.
+this lab's outline, and adds `mode.go`, the tests, and the examples. There's
+nothing to commit as you go: Lab 5 commits the whole function at once.
 
 Have a look at `example/composition.yaml`. Step `compose` uses
 function-patch-and-transform to compose a Bucket, a provider-kubernetes
@@ -289,7 +289,7 @@ Jump to the finished Lab 2:
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-02 && git read-tree -u --reset FETCH_HEAD
 ```
 
-This replaces your files with the end of Lab 2 and leaves your commits as
-they are, which Lab 5 relies on. Restart the function in terminal 1 afterwards.
+This replaces your files with the end of Lab 2. It doesn't touch your git
+history, so there's nothing to commit first. Restart the function in terminal 1 afterwards.
 
 **Next:** [Lab 3: Generalize with an input API](03-generalize-input.md)

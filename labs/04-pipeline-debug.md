@@ -44,8 +44,7 @@ git checkout FETCH_HEAD -- fn.go fn_test.go example/
 
 Same repo as in Lab 3. The checkout replaces `fn.go` with the finished Lab 3
 code plus this lab's outline. It also brings the new tests and examples,
-including `example/test.sh`, a render test harness you use in Step 4. Your
-commits stay as they are.
+including `example/test.sh`, a render test harness you use in Step 4.
 
 > 💡 In a real pipeline, function-lifecycle goes after every step that
 > composes resources, and before steps that only read them, such as
@@ -184,7 +183,7 @@ Jump to the finished Lab 4:
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-04 && git read-tree -u --reset FETCH_HEAD
 ```
 
-This replaces your files with the end of Lab 4 and leaves your commits as
-they are.
+This replaces your files with the end of Lab 4. It doesn't touch your git
+history, so there's nothing to commit first. Restart the function in terminal 1 afterwards.
 
 **Next:** [Lab 5: Operations and the PR](05-pr-ready.md)

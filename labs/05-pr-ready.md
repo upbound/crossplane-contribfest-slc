@@ -63,7 +63,7 @@ git checkout FETCH_HEAD -- example/ README.md package/crossplane.yaml
 The checkout adds `operation.go`, its tests in `operation_test.go`, and the
 Operation examples. It also brings the finished README and package metadata,
 and the finished Lab 4 code: `fn.go`, with `fn_test.go` and `mode.go` to
-match it. Your commits stay as they are.
+match it.
 
 Have a look at `example/operation.yaml`. Its input sets `mode: ObserveOnly`,
 and its `requirements` select every App labelled `freeze: "true"`.
