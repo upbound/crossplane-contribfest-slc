@@ -223,7 +223,7 @@ Lint reports `0 issues`, and the tests pass.
 
 ## Step 5: README and package metadata
 
-Users read the README. Registries and the Marketplace show the
+Users read the README. Package registries show the
 `meta.crossplane.io` annotations in `package/crossplane.yaml`. A good README
 takes longer than this lab, so Step 1 brought the reference ones. Read both,
 and make them yours.
