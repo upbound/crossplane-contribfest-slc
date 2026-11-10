@@ -1,8 +1,8 @@
 # Lab 6: Local e2e, the last check before a PR
 
 **Objective**: Test your function on a real control plane on your laptop, with
-an e2e test anyone can rerun, and get it green. That's the last check before a
-PR.
+an e2e test anyone can rerun. Get it green, then commit the test with your
+working function. That's the last check before a PR.
 
 ⏱ **10 minutes**, on the cluster `./scripts/setup.sh --e2e` created before the
 session
@@ -14,8 +14,8 @@ session
 - Know what an e2e test catches that unit tests and render can't
 - Install a function you built on a real control plane: image, package,
   registry, `Function`
-- Turn that into a test anyone can rerun, and watch it catch a bug render
-  can't see
+- Turn that into a test anyone can rerun, watch it catch a bug render can't
+  see, and commit it with the function it tests
 
 ## 📋 Prerequisites
 
@@ -256,10 +256,26 @@ once more:
 ./e2e/run.sh
 ```
 
-It prints `All e2e checks passed.` That's the state to open a PR from: unit
-tests, lint, renders, and an e2e test on a real control plane that anyone can
-rerun with `./e2e/cluster.sh` and `./e2e/run.sh`. function-lifecycle's PR
-template asks whether you ran the e2e test, so you can tick that box.
+It prints `All e2e checks passed.`
+
+## Step 8: Commit the test with your working function
+
+The function works, and the test proves it. Add the test to the commit Lab 5
+made, so the function and its e2e test travel together:
+
+```shell
+git switch pr-ready
+git add e2e/
+git commit --amend --no-edit
+git show --stat --oneline HEAD
+```
+
+`git switch` makes sure you amend the function's commit, not the scaffold.
+`--no-edit` keeps Lab 5's message and its sign-off. `git show` lists `e2e/`
+next to `fn.go` and `operation.go`: one signed-off commit on `pr-ready`, with
+unit tests, renders, and an e2e test anyone can rerun with `./e2e/cluster.sh`
+and `./e2e/run.sh`. That's the state to open a PR from. function-lifecycle's
+PR template asks whether you ran the e2e test, so you can tick that box.
 
 ---
 
@@ -268,17 +284,8 @@ template asks whether you ran the e2e test, so you can tick that box.
 - `package/crossplane.yaml` lists both capabilities, `composition` and
   `operation`
 - `./e2e/run.sh` prints `All e2e checks passed.`
-
-**Bonus:** commit the e2e test next to your function, so your PR carries it
-too:
-
-```shell
-git add e2e/
-git commit -s -m "test: add a local e2e test on kind"
-git log --oneline main..pr-ready
-```
-
-It shows two signed-off commits: your function and its e2e test.
+- `git show --stat --oneline HEAD` lists `e2e/` in your function's signed-off
+  commit
 
 ## Explore more (if you finish early, or at home)
 
