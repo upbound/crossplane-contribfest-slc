@@ -1,7 +1,8 @@
 # Lab 6: Local e2e, the last check before a PR
 
-**Objective**: Test your function on a real control plane on your laptop, and
-commit the test with it. Then your branch is PR-ready.
+**Objective**: Test your function on a real control plane on your laptop, with
+an e2e test anyone can rerun, and get it green. That's the last check before a
+PR.
 
 ⏱ **10 minutes**, on the cluster `./scripts/setup.sh --e2e` created before the
 session
@@ -13,7 +14,8 @@ session
 - Know what an e2e test catches that unit tests and render can't
 - Install a function you built on a real control plane: image, package,
   registry, `Function`
-- Turn that into a test anyone can rerun, and commit it with your function
+- Turn that into a test anyone can rerun, and watch it catch a bug render
+  can't see
 
 ## 📋 Prerequisites
 
@@ -234,14 +236,41 @@ FAIL  the Operation succeeds
 ```
 
 Your function would have shipped like that, and every Operation that uses it
-would fail. Put the `- operation` line back, and run the e2e test once more.
-It passes:
+would fail.
+
+## Step 7: Put it back, and get it green
+
+Restore `package/crossplane.yaml` from your Lab 5 commit, and check its
+capabilities:
+
+```shell
+git checkout HEAD -- package/crossplane.yaml
+grep -A2 'capabilities:' package/crossplane.yaml
+```
+
+It lists `- composition` and `- operation`. If `- operation` is missing, your
+Lab 5 commit never declared it: add the line by hand. Then run the e2e test
+once more:
 
 ```shell
 ./e2e/run.sh
 ```
 
-## Step 7: Commit the e2e test, PR-ready
+It prints `All e2e checks passed.` That's the state to open a PR from: unit
+tests, lint, renders, and an e2e test on a real control plane that anyone can
+rerun with `./e2e/cluster.sh` and `./e2e/run.sh`. function-lifecycle's PR
+template asks whether you ran the e2e test, so you can tick that box.
+
+---
+
+## ✅ Done when
+
+- `package/crossplane.yaml` lists both capabilities, `composition` and
+  `operation`
+- `./e2e/run.sh` prints `All e2e checks passed.`
+
+**Bonus:** commit the e2e test next to your function, so your PR carries it
+too:
 
 ```shell
 git add e2e/
@@ -249,18 +278,7 @@ git commit -s -m "test: add a local e2e test on kind"
 git log --oneline main..pr-ready
 ```
 
-Your branch is PR-ready: unit tests, lint, renders, and an e2e test anyone can
-rerun with `./e2e/cluster.sh` and `./e2e/run.sh`. Every commit is signed off.
-function-lifecycle's PR template asks whether you ran the e2e test, so when you
-open a PR upstream, you can tick that box.
-
----
-
-## ✅ Done when
-
-- `./e2e/run.sh` prints `All e2e checks passed.`
-- `git log --oneline main..pr-ready` shows two signed-off commits: your
-  function and its e2e test
+It shows two signed-off commits: your function and its e2e test.
 
 ## Explore more (if you finish early, or at home)
 
