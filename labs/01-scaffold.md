@@ -90,6 +90,9 @@ git init -b main && git add -A && git commit -s -m "chore: scaffold"
 go test -v ./...
 ```
 
+That's your only commit until Lab 5. Labs 2–4 change files without
+committing, and Lab 5 commits the whole function at once.
+
 In **terminal 1**, run the function:
 
 ```shell
@@ -109,7 +112,8 @@ crossplane composition render example/xr.yaml example/composition.yaml example/f
 ```
 
 `--crossplane-binary` takes a path, not a command name, hence the
-`$(which …)`. `-r` is short for `--include-function-results`.
+`$(which …)`. Later labs use `-r`, short for `--include-function-results`.
+It's unrelated to the `-r` of `xpkg init` in Step 1.
 
 > 💡 **Binary or container?** It's the same render engine either way: the
 > flag runs Crossplane as a local process. If Docker, Colima, or Podman is

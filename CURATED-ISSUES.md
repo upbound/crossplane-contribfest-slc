@@ -53,8 +53,8 @@ start; some are old.
 ## Your next function
 
 - **Stable secrets.** Generate a password once and keep it stable by reading it
-  back from observed state. Nothing on the Marketplace does this today, and it's
-  the best way to learn observed vs desired state.
+  back from observed state. No function in the ecosystem is built for this yet,
+  and it's the best way to learn observed vs desired state.
 - **function-template-rust.** The official
   [function-sdk-rust](https://github.com/crossplane/function-sdk-rust) is two
   months old and has no template yet.

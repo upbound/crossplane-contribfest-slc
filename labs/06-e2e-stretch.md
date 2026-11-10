@@ -1,7 +1,8 @@
 # Lab 6: Local e2e, the last check before a PR
 
-**Objective**: Test your function on a real control plane on your laptop, and
-commit the test with it. Then your branch is PR-ready.
+**Objective**: Test your function on a real control plane on your laptop, with
+an e2e test anyone can rerun. Get it green, then commit the test with your
+working function. That's the last check before a PR.
 
 ⏱ **10 minutes**, on the cluster `./scripts/setup.sh --e2e` created before the
 session
@@ -13,11 +14,14 @@ session
 - Know what an e2e test catches that unit tests and render can't
 - Install a function you built on a real control plane: image, package,
   registry, `Function`
-- Turn that into a test anyone can rerun, and commit it with your function
+- Turn that into a test anyone can rerun, watch it catch a bug render can't
+  see, and commit it with the function it tests
 
 ## 📋 Prerequisites
 
 - [ ] Completed Lab 5: your function is committed on the `pr-ready` branch
+- [ ] Your function still running in terminal 1, from Lab 5. Step 6 renders
+  with it.
 - [ ] Docker running, plus kind, kubectl, and helm. `setup.sh` doesn't install
   these.
 - [ ] The `lifecycle-e2e` cluster from `./scripts/setup.sh --e2e`. Without it,
@@ -60,7 +64,11 @@ Apps, and the freeze Operation.
 ## Step 2: Check the control plane
 
 `./scripts/setup.sh --e2e` created it before the session by running
-`./e2e/cluster.sh`. These are the commands it ran:
+`./e2e/cluster.sh`, so there's nothing to create here. What it ran is below,
+for reading only.
+
+<details>
+<summary>What <code>./e2e/cluster.sh</code> ran (read only, don't run these)</summary>
 
 ```shell
 kind create cluster --name lifecycle-e2e
@@ -78,9 +86,11 @@ kubectl apply -f e2e/manifests/composition.yaml -f e2e/manifests/providerconfig.
 - `--enable-operations` turns on Operations, which are still alpha.
 - `provider.yaml` gives provider-kubernetes permission to manage ConfigMaps in
   the cluster. `functions.yaml` installs function-patch-and-transform and
-  function-auto-ready. Your function comes next.
+  function-auto-ready.
 
-Point `kubectl` at the cluster, and check it:
+</details>
+
+**Run these** to point `kubectl` at the cluster and check it:
 
 ```shell
 kind export kubeconfig --name lifecycle-e2e
@@ -88,8 +98,10 @@ kubectl get providers.pkg.crossplane.io,functions.pkg.crossplane.io
 kubectl get xrd
 ```
 
-The provider and the two functions are `HEALTHY`, and the
-`apps.example.crossplane.io` XRD is `ESTABLISHED`. No cluster? Run
+The provider and the functions are `HEALTHY`, and the
+`apps.example.crossplane.io` XRD is `ESTABLISHED`. `function-lifecycle` is
+there too if `setup.sh --e2e` ran its warm-up: that's the reference build.
+Step 3 replaces it with yours, so `kubectl apply` says `configured` there. No cluster? Run
 `./e2e/cluster.sh`. It pulls about 1.5 GB of images, so it takes about 5
 minutes.
 
@@ -133,7 +145,166 @@ kubectl get functions.pkg.crossplane.io function-lifecycle
 After a few seconds, `HEALTHY` is `True`, and `PACKAGE` is the tag you just
 built.
 
-## Step 4: Try the modes by hand
+## Step 4: See what only a cluster can show
+
+In Lab 2, render showed the Provision policies on the `Object`. Only a real
+control plane shows what they do. Create the App from Lab 2's Provision
+example:
+
+```shell
+kubectl apply -f example/xr-provision.yaml
+kubectl wait apps.example.crossplane.io my-app -n default --for condition=Ready --timeout 2m
+crossplane resource trace apps.example.crossplane.io my-app -n default
+```
+
+```text
+NAME                                         SYNCED   READY   STATUS
+App/my-app (default)                         True     True    Available
+├─ Object/my-app-b8788b47b034 (default)      True     True    Available
+└─ ConfigMap/my-app-1051dc8fe27f (default)   -        -
+```
+
+The `Object` is a managed resource, so your function set its policies. The
+plain ConfigMap isn't, so your function skipped it. See the policies:
+
+```shell
+kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
+```
+
+`POLICIES` shows `[Observe Create Update LateInitialize]`, with no `Delete`.
+The `Object` manages a ConfigMap of its own, `my-app-config`, through
+provider-kubernetes. Delete the App, and look for that ConfigMap:
+
+```shell
+kubectl delete apps.example.crossplane.io my-app -n default
+kubectl get configmap my-app-config -n default
+```
+
+The App is gone, and `my-app-config` is still there. That's the Provision
+recipe from Lab 2: delete an XR, keep what it manages. Render can't show you
+that, because it never runs a provider.
+
+## Step 5: Run the e2e test
+
+```shell
+./e2e/run.sh
+```
+
+It does what you just did by hand, and checks each result. Open
+`e2e/run.sh`: nothing in it is hidden. Its first three steps are the three
+blocks of Step 3, with a fresh tag, so it always tests your current code.
+Scenario 1 is Step 4. Scenario 2 applies a one-off Operation like Lab 5's, and
+checks that it freezes only the App labelled `freeze: "true"`:
+
+```text
+==> Scenario 1: Provision, then delete the App. Its ConfigMap survives.
+PASS  Provision sets the Object's policies
+PASS  the ConfigMap outlives the App
+
+==> Scenario 2: an Operation freezes the Apps labelled freeze: "true".
+PASS  the Operation succeeds
+PASS  the Operation annotates the labelled App
+PASS  the composition applies ObserveOnly
+PASS  the other App keeps Full
+
+All e2e checks passed.
+```
+
+It takes about a minute.
+
+## Step 6: Watch it catch what render can't
+
+Break the package. In `package/crossplane.yaml`, delete the `- operation` line
+under `capabilities`. Render the Operation as in Lab 5, with your function
+still running in terminal 1:
+
+> 🔁 **Terminal 1:** if you stopped your function after Lab 5, start it again:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
+
+**Terminal 2:**
+
+```shell
+crossplane operation render example/operation.yaml example/functions.yaml \
+  -e example/apps.yaml -r --crossplane-binary=$(which crossplane-core)
+```
+
+It still works: render never reads the package metadata. Now run the e2e test
+again:
+
+```shell
+./e2e/run.sh
+```
+
+The e2e Operation sets `retryLimit: 1`, so Crossplane gives up after the first
+failure, about half a minute in:
+
+```text
+FAIL  the Operation succeeds
+      Succeeded: failure limit of 1 reached
+      ValidPipeline: function capability check failed: function "function-lifecycle" (active revision "…") is missing required capabilities: operation
+```
+
+Your function would have shipped like that, and every Operation that uses it
+would fail.
+
+## Step 7: Put it back, and get it green
+
+Restore `package/crossplane.yaml` from your Lab 5 commit, and check its
+capabilities:
+
+```shell
+git checkout HEAD -- package/crossplane.yaml
+grep -A2 'capabilities:' package/crossplane.yaml
+```
+
+It lists `- composition` and `- operation`. If `- operation` is missing, your
+Lab 5 commit never declared it: add the line by hand. Then run the e2e test
+once more:
+
+```shell
+./e2e/run.sh
+```
+
+It prints `All e2e checks passed.`
+
+## Step 8: Commit the test with your working function
+
+The function works, and the test proves it. Add the test to the commit Lab 5
+made, so the function and its e2e test travel together:
+
+```shell
+git switch pr-ready
+git add e2e/
+git commit --amend --no-edit
+git show --stat --oneline HEAD
+```
+
+`git switch` makes sure you amend the function's commit, not the scaffold.
+`--no-edit` keeps Lab 5's message and its sign-off. `git show` lists `e2e/`
+next to `fn.go` and `operation.go`: one signed-off commit on `pr-ready`, with
+unit tests, renders, and an e2e test anyone can rerun with `./e2e/cluster.sh`
+and `./e2e/run.sh`. That's the state to open a PR from. function-lifecycle's
+PR template asks whether you ran the e2e test, so you can tick that box.
+
+---
+
+## ✅ Done when
+
+- `package/crossplane.yaml` lists both capabilities, `composition` and
+  `operation`
+- `./e2e/run.sh` prints `All e2e checks passed.`
+- `git show --stat --oneline HEAD` lists `e2e/` in your function's signed-off
+  commit
+
+## Explore more (if you finish early, or at home)
+
+The cluster stays up, so you can keep trying things on it. During the session,
+the presenter shows the CronOperation on the projector.
+
+### The other modes, by hand
 
 The examples from Labs 2–4 are all one App, `my-app`, each with a different
 mode. This time they run on a real control plane. Create it with no mode set:
@@ -188,35 +359,20 @@ crossplane resource trace apps.example.crossplane.io my-app -n default
 kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
 ```
 
-The App shows `SYNCED False` with `unknown mode "Orphan"`, and the `Object`
+The App shows `SYNCED False`, with a status that ends in `must be one of Full,
+Provision, ObserveOnly, Deprovision`, and the `Object`
 keeps the policies it had, `[Observe]`. The function fails closed, on a real cluster too.
 
-Last, Provision, then delete the App:
-
-```shell
-kubectl apply -f example/xr-provision.yaml
-```
-
-After a few seconds, check the policies again:
-
-```shell
-kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
-```
-
-`POLICIES` shows `[Observe Create Update LateInitialize]`. If it still shows
-`[Observe]`, wait a few seconds and run that command again. Then delete the
-App, and look for its ConfigMap:
+Delete the App when you're done:
 
 ```shell
 kubectl delete apps.example.crossplane.io my-app -n default
-kubectl get configmap my-app-config -n default
 ```
 
-The App is gone, and its ConfigMap is still there. That's the Lab 2 recipe:
-delete an XR, keep what it manages.
+### The CronOperation, by hand
 
-Now the CronOperation from Lab 5. Create the three Apps from
-`example/apps.yaml`. Two of them are labelled `freeze: "true"`:
+Create the three Apps from `example/apps.yaml`. Two of them are labelled
+`freeze: "true"`:
 
 ```shell
 kubectl apply -f example/apps.yaml
@@ -256,9 +412,8 @@ See which Apps the first run changed:
 kubectl get operations.ops.crossplane.io -l ops.crossplane.io/cronoperation=weekend-freeze -o jsonpath='{range .items[0].status.appliedResourceRefs[*]}{.kind}/{.name}{"\n"}{end}'
 ```
 
-It lists `App/payments` and `App/checkout`. If the e2e test ran on this
-cluster before, it lists `App/frozen` too: an App the test leaves behind,
-labelled the same way.
+It lists `App/payments` and `App/checkout`, and also `App/frozen`: an App the
+e2e test leaves behind, with the same label.
 
 Now look at the Apps' mode annotation, and at the policies your composition
 step set on their Objects:
@@ -301,94 +456,12 @@ kubectl delete cronoperations.ops.crossplane.io weekend-freeze
 > slowed down reconciles of an XR that changed many times in a few seconds. It
 > catches up by itself.
 
-## Step 5: Run the e2e test
-
-```shell
-./e2e/run.sh
-```
-
-It repeats Step 3 with a fresh tag, so it always tests your current code. Then
-it runs two scenarios like the ones you just tried by hand, and checks each
-result:
-
-```text
-==> Scenario 1: Provision, then delete the App. Its ConfigMap survives.
-PASS  Provision sets the Object's policies
-PASS  the ConfigMap outlives the App
-
-==> Scenario 2: an Operation freezes the Apps labelled freeze: "true".
-PASS  the Operation succeeds
-PASS  the Operation annotates the labelled App
-PASS  the composition applies ObserveOnly
-PASS  the other App keeps Full
-
-All e2e checks passed.
-```
-
-It takes under a minute.
-
-## Step 6: Watch it catch what render can't
-
-Break the package. In `package/crossplane.yaml`, delete the `- operation` line
-under `capabilities`. Render the Operation as in Lab 5, with your function
-still running in terminal 1:
-
-```shell
-crossplane operation render example/operation.yaml example/functions.yaml \
-  -e example/apps.yaml -r --crossplane-binary=$(which crossplane-core)
-```
-
-It still works: render never reads the package metadata. Now run the e2e test
-again:
-
-```shell
-./e2e/run.sh
-```
-
-The e2e Operation sets `retryLimit: 1`, so Crossplane gives up after the first
-failure, about half a minute in:
-
-```text
-FAIL  the Operation succeeds
-      Succeeded: failure limit of 1 reached
-      ValidPipeline: function capability check failed: function "function-lifecycle" (active revision "…") is missing required capabilities: operation
-```
-
-Your function would have shipped like that, and every Operation that uses it
-would fail. Put the `- operation` line back, and run the e2e test once more.
-It passes:
-
-```shell
-./e2e/run.sh
-```
-
-## Step 7: Commit the e2e test, PR-ready
-
-```shell
-git add e2e/
-git commit -s -m "test: add a local e2e test on kind"
-git log --oneline main..pr-ready
-```
-
-Your branch is PR-ready: unit tests, lint, renders, and an e2e test anyone can
-rerun with `./e2e/cluster.sh` and `./e2e/run.sh`. Every commit is signed off.
-function-lifecycle's PR template asks whether you ran the e2e test, so when you
-open a PR upstream, you can tick that box.
-
 ## Clean up, after the session
 
 ```shell
 kind delete cluster --name lifecycle-e2e
 docker rm -f lifecycle-e2e-registry
 ```
-
----
-
-## ✅ Done when
-
-- `./e2e/run.sh` prints `All e2e checks passed.`
-- `git log --oneline main..pr-ready` shows two signed-off commits: your
-  function and its e2e test
 
 ## 🛟 Stuck?
 

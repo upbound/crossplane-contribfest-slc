@@ -5,6 +5,10 @@ fast.
 
 ## Your job
 
+- Before 11:00, as people sit down: the intro slide on the projector shows the
+  setup commands. Ask everyone to start `./scripts/setup.sh` right away, so
+  the downloads spread out as people arrive instead of all starting at 11:00.
+  If they ran it before, a rerun takes seconds.
 - Get everyone to a green `✅ Done when` before the mission card on screen moves on.
 - If someone's stuck on Go rather than on Crossplane, point them to **Show
   solution** in Labs 2–5. It's the reference code, ready to paste.
@@ -77,7 +81,7 @@ Lab 6.
 | render: `stat …/example/xr.yaml: no such file or directory`, or `no such file or directory: ./example/test.sh` | The terminal isn't in `~/function-lifecycle` | `cd ~/function-lifecycle`. Every lab command runs there. |
 | render hangs about a minute, then `crossplane internal render returned error with output: : signal: killed` | A function isn't listening: yours on 9443, or function-patch-and-transform on 9444. The output is the same for both. | `lsof -nP -iTCP:9443 -iTCP:9444 -sTCP:LISTEN` shows which is missing. Start your function in terminal 1 with `go run . --insecure --debug --address=127.0.0.1:9443`, and function-patch-and-transform in terminal 3 with `function-patch-and-transform --insecure --address=127.0.0.1:9444`. |
 | render shows old behavior | The function wasn't restarted after a code change | `Ctrl-C` and `go run` again. `./example/test.sh` tests whatever is running, so restart before it too. |
-| `test.sh`: `Nothing is listening on 127.0.0.1:9443` (or `:9444`) | Your function (9443) or function-patch-and-transform (9444) isn't running | Start it in terminal 1 or terminal 3, as in Lab 2, Step 1 |
+| `test.sh`: `Nothing is listening on 127.0.0.1:9443` (or `:9444`) | Your function (9443) or function-patch-and-transform (9444) isn't running | Start it in terminal 1 or terminal 3, as in Lab 2, Step 2 |
 | `bind: address already in use` | An old copy of the function, or of function-patch-and-transform, still holds the port | `lsof -nP -iTCP:9443 -sTCP:LISTEN` shows what it is. `lsof -t -iTCP:9443 -sTCP:LISTEN \| xargs kill` stops it. Use `9444` for function-patch-and-transform. |
 | macOS asks whether to accept incoming network connections | The function was started without `--address=127.0.0.1:9443`, so it listens on every interface | Click Allow, or restart it with the flag as the labs show |
 | Lab 5: `nothing to commit, working tree clean` | A catch-up with `git reset --hard` moved `main` to a tag | On `main`: `git reset --soft $(git rev-list --max-parents=0 HEAD)`. That moves `main` back to the first commit, the scaffold, and keeps the files. Then Step 6 again. |
@@ -91,6 +95,7 @@ Lab 6.
 | `-want rsp, +got rsp` diff | A test failure | Lines with `-` are expected, `+` are actual. Usually a message string or a missing condition. |
 | `crossplane beta trace: unknown command` | CLI v2.5 renamed it | `crossplane resource trace` |
 | The editor shows `exhaustruct_v5` warnings on every struct literal | The editor runs golangci-lint 2.13 or later, which added that linter. CI and `setup.sh` pin 2.12.0. A curated issue. | Ignore them: `golangci-lint run ./...` in the terminal is what counts. Or point the editor at `~/.local/bin/golangci-lint`, or in Neovim with Mason run `:MasonInstall golangci-lint@v2.12.0`. |
+| Lab 5: lint reports `directive //nolint:goconst … is unused (nolintlint)`, or other issues than the lab says | A golangci-lint other than 2.12 comes first on `PATH`, for example from Homebrew. Versions disagree about the same code. | `golangci-lint --version` shows which one runs. `./scripts/setup.sh` names the one in the way. Or run `~/.local/bin/golangci-lint run ./...` |
 | golangci-lint not installed | Local laptop | `go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.0 run ./...` |
 | CI `push` job fails with 403 on ghcr.io | Default token can't write packages | Repo Settings → Actions → General → Workflow permissions → Read and write. PR checks don't need it. |
 | CI `push` job fails with `DENIED` on the second architecture, on the repo's very first push | ghcr.io creates the package with the first architecture, but the workflow can't write to it yet | Re-run the failed job (`gh run rerun <id> --failed`). It passed on the re-run for upbound/function-lifecycle. PR checks don't run this job. |

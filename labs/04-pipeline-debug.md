@@ -19,7 +19,7 @@ pipeline.
 
 - [ ] Completed Lab 3
 - [ ] Your function running in terminal 1, and function-patch-and-transform in
-  terminal 3 (Lab 2, Step 1)
+  terminal 3 (Lab 2, Step 2)
 - [ ] All terminals in `~/function-lifecycle`. Every command in this lab runs there.
 
 ## ✅ Verify Lab 3 Completion
@@ -44,8 +44,7 @@ git checkout FETCH_HEAD -- fn.go fn_test.go example/
 
 Same repo as in Lab 3. The checkout replaces `fn.go` with the finished Lab 3
 code plus this lab's outline. It also brings the new tests and examples,
-including `example/test.sh`, a render test harness you use in Step 4. Your
-commits stay as they are.
+including `example/test.sh`, a render test harness you use in Step 4.
 
 > 💡 In a real pipeline, function-lifecycle goes after every step that
 > composes resources, and before steps that only read them, such as
@@ -110,8 +109,8 @@ func resolveMode(req *fnv1.RunFunctionRequest, xr *resource.Composite, in *v1bet
 }
 ```
 
-Add `"fmt"` to the imports, and this after `response.Normalf` at the end of
-`RunFunction`:
+Add `"fmt"` to the imports. Then replace the `TODO(lab-04) 2` comment, right
+after `response.Normalf` at the end of `RunFunction`, with:
 
 ```go
 	response.ConditionTrue(rsp, ConditionTypeLifecycleMode, string(mode)).
@@ -127,9 +126,14 @@ go test -v ./...
 
 ## Step 4: Run the render tests
 
-Restart the function in terminal 1 (`Ctrl-C`, then
-`go run . --insecure --debug --address=127.0.0.1:9443`) so it runs your new
-code. Then in terminal 2:
+> 🔁 **Terminal 1: restart your function** so it runs your new code. Press
+> `Ctrl-C`, then:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
+
+**Terminal 2:**
 
 ```shell
 ./example/test.sh
@@ -184,7 +188,14 @@ Jump to the finished Lab 4:
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-04 && git read-tree -u --reset FETCH_HEAD
 ```
 
-This replaces your files with the end of Lab 4 and leaves your commits as
-they are.
+This replaces your files with the end of Lab 4. It doesn't touch your git
+history, so there's nothing to commit first.
+
+> 🔁 **Terminal 1: restart your function** so it runs the new code. Press
+> `Ctrl-C`, then:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
 
 **Next:** [Lab 5: Operations and the PR](05-pr-ready.md)

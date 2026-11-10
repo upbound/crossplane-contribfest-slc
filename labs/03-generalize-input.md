@@ -17,7 +17,7 @@ spec or status, or the pipeline context (for example an EnvironmentConfig).
 
 - [ ] Completed Lab 2
 - [ ] Your function running in terminal 1, and function-patch-and-transform in
-  terminal 3 (Lab 2, Step 1)
+  terminal 3 (Lab 2, Step 2)
 - [ ] All terminals in `~/function-lifecycle`. Every command in this lab runs there.
 
 ## ✅ Verify Lab 2 Completion
@@ -65,7 +65,7 @@ git checkout FETCH_HEAD -- fn.go fn_test.go input/ example/
 
 Same repo as in Lab 2. The checkout replaces `fn.go` with the finished Lab 2
 code plus this lab's outline, and `input/` with the new input type. It also
-brings the new tests and examples. Your commits stay as they are.
+brings the new tests and examples.
 
 ## Step 2: Generate the input CRD
 
@@ -204,8 +204,14 @@ go test -v ./...
 
 ## Step 5: Render from the spec and from the context
 
-Restart the function in terminal 1 (`Ctrl-C`, then
-`go run . --insecure --debug --address=127.0.0.1:9443`), then in terminal 2:
+> 🔁 **Terminal 1: restart your function** so it runs your new code. Press
+> `Ctrl-C`, then:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
+
+**Terminal 2:**
 
 ```shell
 crossplane composition render example/xr-spec-mode.yaml example/composition.yaml \
@@ -247,7 +253,14 @@ Jump to the finished Lab 3:
 git fetch https://github.com/upbound/function-lifecycle workshop/lab-03 && git read-tree -u --reset FETCH_HEAD
 ```
 
-This replaces your files with the end of Lab 3 and leaves your commits as
-they are. Restart the function in terminal 1 afterwards.
+This replaces your files with the end of Lab 3. It doesn't touch your git
+history, so there's nothing to commit first.
+
+> 🔁 **Terminal 1: restart your function** so it runs the new code. Press
+> `Ctrl-C`, then:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
 
 **Next:** [Lab 4: Real pipeline and debugging](04-pipeline-debug.md)

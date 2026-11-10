@@ -21,7 +21,7 @@ documented, and committed with a sign-off.
 
 - [ ] Completed Lab 4
 - [ ] Your function running in terminal 1, and function-patch-and-transform in
-  terminal 3 (Lab 2, Step 1)
+  terminal 3 (Lab 2, Step 2)
 - [ ] A terminal in `~/function-lifecycle`. Every command in this lab runs there.
 
 ## ✅ Verify Lab 4 Completion
@@ -63,7 +63,7 @@ git checkout FETCH_HEAD -- example/ README.md package/crossplane.yaml
 The checkout adds `operation.go`, its tests in `operation_test.go`, and the
 Operation examples. It also brings the finished README and package metadata,
 and the finished Lab 4 code: `fn.go`, with `fn_test.go` and `mode.go` to
-match it. Your commits stay as they are.
+match it.
 
 Have a look at `example/operation.yaml`. Its input sets `mode: ObserveOnly`,
 and its `requirements` select every App labelled `freeze: "true"`.
@@ -145,9 +145,14 @@ go test -v ./...
 
 ## Step 3: Render the Operation
 
-Restart the function in terminal 1 (`Ctrl-C`, then
-`go run . --insecure --debug --address=127.0.0.1:9443`) so it runs your new
-code. Then in terminal 2:
+> 🔁 **Terminal 1: restart your function** so it runs your new code. Press
+> `Ctrl-C`, then:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
+
+**Terminal 2:**
 
 ```shell
 crossplane operation render example/operation.yaml example/functions.yaml \
@@ -177,11 +182,16 @@ crossplane operation render example/cronoperation.yaml example/functions.yaml \
 
 ## Step 4: Lint
 
-CI runs golangci-lint. Run the same version locally:
+CI runs golangci-lint 2.12. Check that you have the same version, then run it:
 
 ```shell
+golangci-lint --version
 golangci-lint run ./...
 ```
+
+The first line starts with `golangci-lint has version 2.12.0`. Another version
+reports different issues. Run `./scripts/setup.sh` in the hub repo again, and
+it tells you how to fix it.
 
 It finds 12 `modernize` issues, all in `fn_test.go`. Go 1.26 accepts
 `new("text")`, so the tests' `ptr("text")` helper isn't needed any more. One
@@ -192,7 +202,7 @@ go fix ./...
 ```
 
 That leaves the helper unused. Delete its four lines from `fn_test.go`, around
-line 54:
+line 54, and the blank line below them:
 
 ```go
 // ptr returns a pointer to the supplied value.
@@ -206,14 +216,15 @@ golangci-lint run ./...
 go test -v ./...
 ```
 
-Lint reports `0 issues`, and the tests pass.
+Lint reports `0 issues`, and the tests pass. If it reports `File is not properly
+formatted (gci)`, two blank lines are left where the helper was: delete one.
 
 > 💡 The warning about `gomodguard` being deprecated comes from the template's
 > `.golangci.yml`. That's another upstream fix you could make.
 
 ## Step 5: README and package metadata
 
-Users read the README. Registries and the Marketplace show the
+Users read the README. Package registries show the
 `meta.crossplane.io` annotations in `package/crossplane.yaml`. A good README
 takes longer than this lab, so Step 1 brought the reference ones. Read both,
 and make them yours.
@@ -269,8 +280,8 @@ is signed off.
 - `golangci-lint run ./...` reports `0 issues`, and `go test -v ./...` passes
 - `git log --oneline main..pr-ready` shows your signed-off commit
 
-When you're done for the day, stop both functions: `Ctrl-C` in terminals 1
-and 3.
+Stop function-patch-and-transform now: `Ctrl-C` in terminal 3. Leave your
+function running in terminal 1: Lab 6 renders with it once.
 
 ## 🛟 Stuck?
 
