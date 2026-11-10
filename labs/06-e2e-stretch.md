@@ -20,6 +20,8 @@ session
 ## 📋 Prerequisites
 
 - [ ] Completed Lab 5: your function is committed on the `pr-ready` branch
+- [ ] Your function still running in terminal 1, from Lab 5. Step 6 renders
+  with it.
 - [ ] Docker running, plus kind, kubectl, and helm. `setup.sh` doesn't install
   these.
 - [ ] The `lifecycle-e2e` cluster from `./scripts/setup.sh --e2e`. Without it,
@@ -84,7 +86,7 @@ kubectl apply -f e2e/manifests/composition.yaml -f e2e/manifests/providerconfig.
 - `--enable-operations` turns on Operations, which are still alpha.
 - `provider.yaml` gives provider-kubernetes permission to manage ConfigMaps in
   the cluster. `functions.yaml` installs function-patch-and-transform and
-  function-auto-ready. Your function comes next.
+  function-auto-ready.
 
 </details>
 
@@ -96,8 +98,10 @@ kubectl get providers.pkg.crossplane.io,functions.pkg.crossplane.io
 kubectl get xrd
 ```
 
-The provider and the two functions are `HEALTHY`, and the
-`apps.example.crossplane.io` XRD is `ESTABLISHED`. No cluster? Run
+The provider and the functions are `HEALTHY`, and the
+`apps.example.crossplane.io` XRD is `ESTABLISHED`. `function-lifecycle` is
+there too if `setup.sh --e2e` ran its warm-up: that's the reference build.
+Step 3 replaces it with yours, so `kubectl apply` says `configured` there. No cluster? Run
 `./e2e/cluster.sh`. It pulls about 1.5 GB of images, so it takes about 5
 minutes.
 
@@ -206,13 +210,21 @@ PASS  the other App keeps Full
 All e2e checks passed.
 ```
 
-It takes under a minute.
+It takes about a minute.
 
 ## Step 6: Watch it catch what render can't
 
 Break the package. In `package/crossplane.yaml`, delete the `- operation` line
 under `capabilities`. Render the Operation as in Lab 5, with your function
 still running in terminal 1:
+
+> 🔁 **Terminal 1:** if you stopped your function after Lab 5, start it again:
+>
+> ```shell
+> go run . --insecure --debug --address=127.0.0.1:9443
+> ```
+
+**Terminal 2:**
 
 ```shell
 crossplane operation render example/operation.yaml example/functions.yaml \
@@ -347,7 +359,8 @@ crossplane resource trace apps.example.crossplane.io my-app -n default
 kubectl get objects.kubernetes.m.crossplane.io -n default -l crossplane.io/composite=my-app -o custom-columns=NAME:.metadata.name,POLICIES:.spec.managementPolicies
 ```
 
-The App shows `SYNCED False` with `unknown mode "Orphan"`, and the `Object`
+The App shows `SYNCED False`, with a status that ends in `must be one of Full,
+Provision, ObserveOnly, Deprovision`, and the `Object`
 keeps the policies it had, `[Observe]`. The function fails closed, on a real cluster too.
 
 Delete the App when you're done:
@@ -398,9 +411,9 @@ See which Apps the first run changed:
 ```shell
 kubectl get operations.ops.crossplane.io -l ops.crossplane.io/cronoperation=weekend-freeze -o jsonpath='{range .items[0].status.appliedResourceRefs[*]}{.kind}/{.name}{"\n"}{end}'
 ```
+
 It lists `App/payments` and `App/checkout`, and also `App/frozen`: an App the
 e2e test leaves behind, with the same label.
-
 
 Now look at the Apps' mode annotation, and at the policies your composition
 step set on their Objects:

@@ -37,7 +37,7 @@ From this lab on, you use three:
 |---|---|---|
 | 1 | Your function, `go run . --insecure --debug --address=127.0.0.1:9443` | From Lab 1. Restart it after every code change. |
 | 2 | Your commands: tests and renders | Every command, unless the lab names another terminal |
-| 3 | function-patch-and-transform | **New.** You start it in Step 2, and it runs until the end of Lab 4. |
+| 3 | function-patch-and-transform | **New.** You start it in Step 2, and it runs until the end of Lab 5. |
 
 ---
 
@@ -86,7 +86,7 @@ cd ~/function-lifecycle
 function-patch-and-transform --insecure --address=127.0.0.1:9444
 ```
 
-It prints nothing, and that's fine. Leave it running until the end of Lab 4.
+It prints nothing, and that's fine. Leave it running until the end of Lab 5.
 If the shell says `command not found`, `~/.local/bin` isn't on this
 terminal's `PATH`: see the first row of
 [HELPERS](../HELPERS.md#common-problems).

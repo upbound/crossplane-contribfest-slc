@@ -202,7 +202,7 @@ go fix ./...
 ```
 
 That leaves the helper unused. Delete its four lines from `fn_test.go`, around
-line 54:
+line 54, and the blank line below them:
 
 ```go
 // ptr returns a pointer to the supplied value.
@@ -216,7 +216,8 @@ golangci-lint run ./...
 go test -v ./...
 ```
 
-Lint reports `0 issues`, and the tests pass.
+Lint reports `0 issues`, and the tests pass. If it reports `File is not properly
+formatted (gci)`, two blank lines are left where the helper was: delete one.
 
 > 💡 The warning about `gomodguard` being deprecated comes from the template's
 > `.golangci.yml`. That's another upstream fix you could make.
@@ -279,8 +280,8 @@ is signed off.
 - `golangci-lint run ./...` reports `0 issues`, and `go test -v ./...` passes
 - `git log --oneline main..pr-ready` shows your signed-off commit
 
-When you're done for the day, stop both functions: `Ctrl-C` in terminals 1
-and 3.
+Stop function-patch-and-transform now: `Ctrl-C` in terminal 3. Leave your
+function running in terminal 1: Lab 6 renders with it once.
 
 ## 🛟 Stuck?
 
