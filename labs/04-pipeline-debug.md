@@ -109,8 +109,8 @@ func resolveMode(req *fnv1.RunFunctionRequest, xr *resource.Composite, in *v1bet
 }
 ```
 
-Add `"fmt"` to the imports, and this after `response.Normalf` at the end of
-`RunFunction`:
+Add `"fmt"` to the imports. Then replace the `TODO(lab-04) 2` comment, right
+after `response.Normalf` at the end of `RunFunction`, with:
 
 ```go
 	response.ConditionTrue(rsp, ConditionTypeLifecycleMode, string(mode)).
