@@ -108,12 +108,13 @@ Open **terminal 2**, go to the function, and render the example against it:
 ```shell
 cd ~/function-lifecycle
 crossplane composition render example/xr.yaml example/composition.yaml example/functions.yaml \
-  --include-function-results --crossplane-binary=$(which crossplane-core)
+  --include-function-results --include-full-xr --crossplane-binary=$(which crossplane-core)
 ```
 
 `--crossplane-binary` takes a path, not a command name, hence the
-`$(which …)`. Later labs use `-r`, short for `--include-function-results`.
-It's unrelated to the `-r` of `xpkg init` in Step 1.
+`$(which …)`. `--include-full-xr` copies your XR's spec and metadata into the
+output. Later labs use the short forms, `-r` and `-x`. That `-r` is unrelated
+to the `-r` of `xpkg init` in Step 1.
 
 > 💡 **Binary or container?** It's the same render engine either way: the
 > flag runs Crossplane as a local process. If Docker, Colima, or Podman is

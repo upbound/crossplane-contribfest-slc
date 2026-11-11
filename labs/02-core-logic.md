@@ -254,14 +254,14 @@ function-patch-and-transform composes, then yours sets the policies.
 
 ```shell
 crossplane composition render example/xr-provision.yaml example/composition.yaml \
-  example/functions.yaml -r --crossplane-binary=$(which crossplane-core)
+  example/functions.yaml -r -x --crossplane-binary=$(which crossplane-core)
 ```
 
 Now render an XR with a mode that doesn't exist:
 
 ```shell
 crossplane composition render example/xr-invalid.yaml example/composition.yaml \
-  example/functions.yaml -r --crossplane-binary=$(which crossplane-core)
+  example/functions.yaml -r -x --crossplane-binary=$(which crossplane-core)
 ```
 
 It fails closed: the function returns a fatal result, and render exits with

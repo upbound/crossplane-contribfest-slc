@@ -25,7 +25,7 @@ spec or status, or the pipeline context (for example an EnvironmentConfig).
 ```shell
 go test -v ./...
 crossplane composition render example/xr-provision.yaml example/composition.yaml \
-  example/functions.yaml -r --crossplane-binary=$(which crossplane-core)
+  example/functions.yaml -r -x --crossplane-binary=$(which crossplane-core)
 ```
 
 Tests pass, and the render's result says `2 managed resources (1 skipped)`.
@@ -215,7 +215,7 @@ go test -v ./...
 
 ```shell
 crossplane composition render example/xr-spec-mode.yaml example/composition.yaml \
-  example/functions.yaml -r --crossplane-binary=$(which crossplane-core)
+  example/functions.yaml -r -x --crossplane-binary=$(which crossplane-core)
 ```
 
 The second render uses `composition-environment.yaml`, which reads the mode
@@ -223,15 +223,15 @@ from the pipeline context:
 
 ```shell
 crossplane composition render example/xr.yaml example/composition-environment.yaml \
-  example/functions.yaml -r --crossplane-binary=$(which crossplane-core) \
+  example/functions.yaml -r -x -c --crossplane-binary=$(which crossplane-core) \
   --context-values='apiextensions.crossplane.io/environment={"managementMode":"Deprovision"}'
 ```
 
 `--context-values` fakes what function-environment-configs would put in the
 context, so you can test the change-freeze story without a cluster.
 
-> 💡 To see the map your `lookup` reads, add `-c` to that render. The output
-> ends with `kind: Context`, and under `fields` the key
+> 💡 `-c` shows the map your `lookup` reads. The output ends with
+> `kind: Context`, and under `fields` the key
 > `apiextensions.crossplane.io/environment` holds `managementMode: Deprovision`.
 
 ---

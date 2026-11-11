@@ -27,7 +27,7 @@ pipeline.
 ```shell
 go test -v ./...
 crossplane composition render example/xr-spec-mode.yaml example/composition.yaml \
-  example/functions.yaml -r --crossplane-binary=$(which crossplane-core)
+  example/functions.yaml -r -x --crossplane-binary=$(which crossplane-core)
 ```
 
 Tests pass, and the render shows `ObserveOnly`.
@@ -158,7 +158,7 @@ This one shows the pipeline context, as `kind: Context`:
 
 ```shell
 crossplane composition render example/xr.yaml example/composition-environment.yaml \
-  example/functions.yaml --crossplane-binary=$(which crossplane-core) -c \
+  example/functions.yaml --crossplane-binary=$(which crossplane-core) -x -c \
   --context-values='apiextensions.crossplane.io/environment={"managementMode":"Deprovision"}'
 ```
 
